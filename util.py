@@ -44,6 +44,7 @@ def bbox_iou(box1, box2):
     
     return iou
 
+
 def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
 
     
@@ -128,9 +129,9 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
             continue
         
         if image_pred_.shape[0] == 0:
-            continue       
-#        
-  
+            continue               
+
+
         #Get the various classes detected in the image
         img_classes = unique(image_pred_[:,-1])  # -1 index holds the class index
         

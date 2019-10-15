@@ -14,12 +14,12 @@ import pickle as pkl
 import pandas as pd
 import random
 
+
 def arg_parse():
     """
-    Parse arguements to the detect module
-    
+    Parse arguements to the detect module.
     """
-    
+
     parser = argparse.ArgumentParser(description='YOLO v3 Detection Module')
     parser.add_argument("--bs", dest = "bs", help = "Batch size", default = 1)
     parser.add_argument("--confidence", dest = "confidence", help = "Object Confidence to filter predictions", default = 0.5)
@@ -36,19 +36,22 @@ def arg_parse():
     parser.add_argument("--video", dest = "videofile", help = "Video file to     run detection on", default = "video.avi", type = str)
     
     return parser.parse_args()
-    
+
+
 args = arg_parse()
+
 batch_size = int(args.bs)
 confidence = float(args.confidence)
 nms_thesh = float(args.nms_thresh)
-start = 0
-CUDA = torch.cuda.is_available()
 
+start = 0
+
+# check if the CUDA is available
+CUDA = torch.cuda.is_available()
 
 
 num_classes = 80
 classes = load_classes("data/coco.names")
-
 
 
 #Set up the neural network
@@ -59,6 +62,7 @@ print("Network successfully loaded")
 
 model.net_info["height"] = args.reso
 inp_dim = int(model.net_info["height"])
+
 assert inp_dim % 32 == 0 
 assert inp_dim > 32
 
@@ -67,101 +71,127 @@ if CUDA:
     model.cuda()
 
 
-#Set the model in evaluation mode
-model.eval()
-
+model.eval()  # Set the model in evaluation mode
 
 
 def write(x, results):
-    c1 = tuple(x[1:3].int())
-    c2 = tuple(x[3:5].int())
+    vertex1 = tuple(x[1:3].int()) # The first vertex
+    vertex2 = tuple(x[3:5].int()) # The other vertex, which is opposite to c1
+
+    storeVertices(vertex1, vertex2)
+
     img = results
+
     cls = int(x[-1])
+
     color = random.choice(colors)
     label = "{0}".format(classes[cls])
-    cv2.rectangle(img, c1, c2,color, 1)
+
+    cv2.rectangle(img, vertex1, vertex2, color, 1)
+
     t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1 , 1)[0]
-    c2 = c1[0] + t_size[0] + 3, c1[1] + t_size[1] + 4
-    cv2.rectangle(img, c1, c2,color, -1)
-    cv2.putText(img, label, (c1[0], c1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225,255,255], 1);
+    vertex2 = vertex1[0] + t_size[0] + 3, vertex1[1] + t_size[1] + 4
+
+    cv2.rectangle(img, vertex1, vertex2, color, -1)
+
+    cv2.putText(img, label, (vertex1[0], vertex1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225, 255, 255], 1)
     return img
 
 
-#Detection phase
 
-videofile = args.videofile #or path to the video file. 
+# Detection phase
 
-cap = cv2.VideoCapture(videofile)  
+videofile = args.videofile  # args.videofile = path to the video file. 
 
-#cap = cv2.VideoCapture(0)  for webcam
+cap = cv2.VideoCapture(videofile)  # cap = cv2.VideoCapture(0)  for webcam
 
 assert cap.isOpened(), 'Cannot capture source'
 
-frames = 0  
+frames = 0
 start = time.time()
 
+
+def storeVertices(vertex1, vertex2):
+    """
+    This function stores the vertices of the object that is detected in the current frame.
+
+    :param vertex1: the first vertex
+    :param vertex2: the second vertex, which is opposite to vertex1
+    """
+    print('vertex1: ', vertex1)
+    print('vertex2: ', vertex2)
+    print('current frame: ', frames)
+    # write data to text file
+
+
+
+# use while loop to process all frames
 while cap.isOpened():
     ret, frame = cap.read()
-    
+
+    # use if-else statement to check if there is remaining frame.
     if ret:   
         img = prep_image(frame, inp_dim)
 #        cv2.imshow("a", frame)
         im_dim = frame.shape[1], frame.shape[0]
-        im_dim = torch.FloatTensor(im_dim).repeat(1,2)   
-                     
+        im_dim = torch.FloatTensor(im_dim).repeat(1,2)
+
         if CUDA:
             im_dim = im_dim.cuda()
             img = img.cuda()
-        
+
         with torch.no_grad():
             output = model(Variable(img, volatile = True), CUDA)
+
         output = write_results(output, confidence, num_classes, nms_conf = nms_thesh)
 
 
+        # check the type of the output
         if type(output) == int:
             frames += 1
             print("FPS of the video is {:5.4f}".format( frames / (time.time() - start)))
             cv2.imshow("frame", frame)
             key = cv2.waitKey(1)
+
             if key & 0xFF == ord('q'):
                 break
+
             continue
-        
-        
-        
 
         im_dim = im_dim.repeat(output.size(0), 1)
         scaling_factor = torch.min(416/im_dim,1)[0].view(-1,1)
-        
-        output[:,[1,3]] -= (inp_dim - scaling_factor*im_dim[:,0].view(-1,1))/2
-        output[:,[2,4]] -= (inp_dim - scaling_factor*im_dim[:,1].view(-1,1))/2
-        
+
+        output[:,[1,3]] -= (inp_dim - scaling_factor*im_dim[:,0].view(-1,1)) / 2
+        output[:,[2,4]] -= (inp_dim - scaling_factor*im_dim[:,1].view(-1,1)) / 2
+
         output[:,1:5] /= scaling_factor
 
+        #TODO ???
         for i in range(output.shape[0]):
             output[i, [1,3]] = torch.clamp(output[i, [1,3]], 0.0, im_dim[i,0])
             output[i, [2,4]] = torch.clamp(output[i, [2,4]], 0.0, im_dim[i,1])
-    
-        
-        
 
         classes = load_classes('data/coco.names')
-        colors = pkl.load(open("pallete", "rb"))
 
+        colors = pkl.load(open("pallete", "rb")) #load the binary data of colors from the pallete
+
+        # use the lambda to draw rectangles on the frames
         list(map(lambda x: write(x, frame), output))
-        
-        cv2.imshow("frame", frame)
-        key = cv2.waitKey(1)
-        if key & 0xFF == ord('q'):
+
+        cv2.imshow("frame", frame)  # show the modified frame to the user
+
+        # cv2.waitKey(time) waits for "time" miliseconds to get the value of the pressed key
+        # "& 0xFF" is essential for 64bit OS - not necessary for 32bit OS
+        key = cv2.waitKey(1) & 0xFF
+
+        # check if the pressed key is 'q'
+        if key == ord('q'):
             break
-        frames += 1
+
+        frames += 1 # increase the number of frames that are processed
+
         print(time.time() - start)
         print("FPS of the video is {:5.2f}".format( frames / (time.time() - start)))
+
     else:
         break     
-
-
-
-
-
-

@@ -18,6 +18,7 @@ def get_test_input():
     img_ = Variable(img_)                     # Convert to Variable
     return img_
 
+
 def parse_cfg(cfgfile):
     """
     Takes a configuration file
