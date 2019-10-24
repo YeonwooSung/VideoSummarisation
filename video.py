@@ -78,15 +78,15 @@ def write(x, results):
     vertex1 = tuple(x[1:3].int()) # The first vertex
     vertex2 = tuple(x[3:5].int()) # The other vertex, which is opposite to c1
 
-    storeVertices(vertex1, vertex2)
-
     img = results
 
     cls = int(x[-1])
 
     color = random.choice(colors)
     label = "{0}".format(classes[cls])
-
+    
+    f.write('\t{0} ({1}, {2}) ({3}, {4})\r\n'.format(label, vertex1[0], vertex1[1], vertex2[0], vertex2[1]))
+    
     cv2.rectangle(img, vertex1, vertex2, color, 1)
 
     t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1 , 1)[0]
@@ -101,38 +101,34 @@ def write(x, results):
 
 # Detection phase
 
-videofile = args.videofile  # args.videofile = path to the video file. 
+videofile = args.videofile  # args.videofile = path to the video file.
 
-cap = cv2.VideoCapture(videofile)  # cap = cv2.VideoCapture(0)  for webcam
+cap = cv2.VideoCapture(videofile)  # cap = cv2.VideoCapture(0) -> for webcam
 
+# use assert statement to check if the VideoCpature object is available to use
 assert cap.isOpened(), 'Cannot capture source'
+
+frame_width = int(cap.get(3))
+frame_height = int(cap.get(4))
+
+vWriter = cv2.VideoWriter('outpy.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (frame_width, frame_height))
 
 frames = 0
 start = time.time()
 
-
-def storeVertices(vertex1, vertex2):
-    """
-    This function stores the vertices of the object that is detected in the current frame.
-
-    :param vertex1: the first vertex
-    :param vertex2: the second vertex, which is opposite to vertex1
-    """
-    print('vertex1: ', vertex1)
-    print('vertex2: ', vertex2)
-    print('current frame: ', frames)
-    # write data to text file
+# open the file stream instance to write a file
+f = open('testOutput.txt', 'w+')
 
 
 
-# use while loop to process all frames
+# use while loop to iterate the frames of the target video
 while cap.isOpened():
-    ret, frame = cap.read()
+    ret, frame = cap.read() # read the new frame
 
     # use if-else statement to check if there is remaining frame.
     if ret:   
         img = prep_image(frame, inp_dim)
-#        cv2.imshow("a", frame)
+
         im_dim = frame.shape[1], frame.shape[0]
         im_dim = torch.FloatTensor(im_dim).repeat(1,2)
 
@@ -175,8 +171,14 @@ while cap.isOpened():
 
         colors = pkl.load(open("pallete", "rb")) #load the binary data of colors from the pallete
 
+        # write text to the file
+        f.write('\ncurrent frame: %d\n' % frames)
+
         # use the lambda to draw rectangles on the frames
         list(map(lambda x: write(x, frame), output))
+
+        # write the frame
+        vWriter.write(frame)
 
         cv2.imshow("frame", frame)  # show the modified frame to the user
 
@@ -194,4 +196,15 @@ while cap.isOpened():
         print("FPS of the video is {:5.2f}".format( frames / (time.time() - start)))
 
     else:
-        break     
+        break
+
+
+# close the file stream
+f.close()
+
+# When everything done, release the video capture object
+cap.release()
+vWriter.release()
+
+# Closes all the frames
+cv2.destroyAllWindows()
