@@ -230,11 +230,13 @@ while cap.isOpened():
             previousList = objectList
 
 
-        if (frames % numOfTurns == 0):
+        if (frames < 3):
+            vWriter.write(frame)  # write the frame
+            
+        elif (frames % numOfTurns == 0):
             # iterate the object lists, and check if the object
             if (compareObjectLists(objectList, lastSelectedList)):
-                # write the frame
-                vWriter.write(frame)
+                vWriter.write(frame)  # write the frame
             else:
                 numOfUnselectedTurns += 1
 
