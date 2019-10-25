@@ -10,6 +10,7 @@ import argparse
 import os 
 import os.path as osp
 from darknet import Darknet
+from detectedObject import DetectedObject, compareObjectLists
 import pickle as pkl
 import pandas as pd
 import random
@@ -44,6 +45,12 @@ batch_size = int(args.bs)
 confidence = float(args.confidence)
 nms_thesh = float(args.nms_thresh)
 
+# constants
+numOfFrames_output = 3
+numOfTurns = 5
+
+# global variables to check the cost time
+numOfUnselectedTurns = 0
 start = 0
 
 # check if the CUDA is available
@@ -53,6 +60,10 @@ CUDA = torch.cuda.is_available()
 num_classes = 80
 classes = load_classes("data/coco.names")
 
+# lists to store the detected objects
+objectList = []
+previousList = []
+lastSelectedList = []
 
 #Set up the neural network
 print("Loading network.....")
@@ -75,6 +86,28 @@ model.eval()  # Set the model in evaluation mode
 
 
 def write(x, results):
+    vertex1 = tuple(x[1:3].int())  # The first vertex
+    vertex2 = tuple(x[3:5].int())  # The other vertex, which is opposite to c1
+
+    cls = int(x[-1])
+
+    color = random.choice(colors)
+    label = "{0}".format(classes[cls])
+
+    img = parseResult(x, results)
+
+    cv2.rectangle(img, vertex1, vertex2, color, 1)
+
+    t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1, 1)[0]
+    vertex2 = vertex1[0] + t_size[0] + 3, vertex1[1] + t_size[1] + 4
+
+    cv2.rectangle(img, vertex1, vertex2, color, -1)
+
+    cv2.putText(img, label, (vertex1[0], vertex1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225, 255, 255], 1)
+    return img
+
+
+def parseResult(x, results):
     vertex1 = tuple(x[1:3].int()) # The first vertex
     vertex2 = tuple(x[3:5].int()) # The other vertex, which is opposite to c1
 
@@ -82,19 +115,17 @@ def write(x, results):
 
     cls = int(x[-1])
 
-    color = random.choice(colors)
     label = "{0}".format(classes[cls])
     
-    f.write('\t{0} ({1}, {2}) ({3}, {4})\r\n'.format(label, vertex1[0], vertex1[1], vertex2[0], vertex2[1]))
+    obj = DetectedObject()
+    obj.setLabel(label)
+    obj.setVertices(vertex1, vertex2)
+
+    f.write('\t{0}\r\n'.format(obj.getInfoString()))
     
-    cv2.rectangle(img, vertex1, vertex2, color, 1)
+    # push the detected object to the list
+    objectList.append(obj)
 
-    t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1 , 1)[0]
-    vertex2 = vertex1[0] + t_size[0] + 3, vertex1[1] + t_size[1] + 4
-
-    cv2.rectangle(img, vertex1, vertex2, color, -1)
-
-    cv2.putText(img, label, (vertex1[0], vertex1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225, 255, 255], 1)
     return img
 
 
@@ -111,7 +142,7 @@ assert cap.isOpened(), 'Cannot capture source'
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 
-vWriter = cv2.VideoWriter('outpy.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (frame_width, frame_height))
+vWriter = cv2.VideoWriter('outpy.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), numOfFrames_output, (frame_width, frame_height))
 
 frames = 0
 start = time.time()
@@ -126,7 +157,7 @@ while cap.isOpened():
     ret, frame = cap.read() # read the new frame
 
     # use if-else statement to check if there is remaining frame.
-    if ret:   
+    if ret:
         img = prep_image(frame, inp_dim)
 
         im_dim = frame.shape[1], frame.shape[0]
@@ -135,12 +166,9 @@ while cap.isOpened():
         if CUDA:
             im_dim = im_dim.cuda()
             img = img.cuda()
-
         with torch.no_grad():
             output = model(Variable(img, volatile = True), CUDA)
-
         output = write_results(output, confidence, num_classes, nms_conf = nms_thesh)
-
 
         # check the type of the output
         if type(output) == int:
@@ -149,17 +177,18 @@ while cap.isOpened():
             cv2.imshow("frame", frame)
             key = cv2.waitKey(1)
 
+            # check if the user pressed the 'q' button to quit the program
             if key & 0xFF == ord('q'):
                 break
-
             continue
+
 
         im_dim = im_dim.repeat(output.size(0), 1)
         scaling_factor = torch.min(416/im_dim,1)[0].view(-1,1)
 
+        # rescale the output
         output[:,[1,3]] -= (inp_dim - scaling_factor*im_dim[:,0].view(-1,1)) / 2
         output[:,[2,4]] -= (inp_dim - scaling_factor*im_dim[:,1].view(-1,1)) / 2
-
         output[:,1:5] /= scaling_factor
 
         #TODO ???
@@ -175,12 +204,9 @@ while cap.isOpened():
         f.write('\ncurrent frame: %d\n' % frames)
 
         # use the lambda to draw rectangles on the frames
-        list(map(lambda x: write(x, frame), output))
+        list(map(lambda x: parseResult(x, frame), output))
 
-        # write the frame
-        vWriter.write(frame)
-
-        cv2.imshow("frame", frame)  # show the modified frame to the user
+        #TODO cv2.imshow("frame", frame)  # show the modified frame to the user
 
         # cv2.waitKey(time) waits for "time" miliseconds to get the value of the pressed key
         # "& 0xFF" is essential for 64bit OS - not necessary for 32bit OS
@@ -192,8 +218,29 @@ while cap.isOpened():
 
         frames += 1 # increase the number of frames that are processed
 
-        print(time.time() - start)
-        print("FPS of the video is {:5.2f}".format( frames / (time.time() - start)))
+        timeCost = time.time() - start
+        print(timeCost)
+        print("FPS of the video is {:5.2f}".format( frames / (timeCost)))
+
+
+        if (len(previousList) > len(objectList)):
+            objectList = previousList
+        else:
+            # update the previousList to the current list
+            previousList = objectList
+
+
+        if (frames % numOfTurns == 0):
+            # iterate the object lists, and check if the object
+            if (compareObjectLists(objectList, lastSelectedList)):
+                # write the frame
+                vWriter.write(frame)
+            else:
+                numOfUnselectedTurns += 1
+
+                if (numOfUnselectedTurns > 100):
+                    vWriter.write(frame)  # write the frame
+                    numOfUnselectedTurns = 0
 
     else:
         break

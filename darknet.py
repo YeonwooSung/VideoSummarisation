@@ -165,6 +165,8 @@ def create_modules(blocks):
         
     return (net_info, module_list)
 
+
+
 class Darknet(nn.Module):
     def __init__(self, cfgfile):
         super(Darknet, self).__init__()
