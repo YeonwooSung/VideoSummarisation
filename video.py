@@ -85,29 +85,13 @@ if CUDA:
 model.eval()  # Set the model in evaluation mode
 
 
-def write(x, results):
-    vertex1 = tuple(x[1:3].int())  # The first vertex
-    vertex2 = tuple(x[3:5].int())  # The other vertex, which is opposite to c1
-
-    cls = int(x[-1])
-
-    color = random.choice(colors)
-    label = "{0}".format(classes[cls])
-
-    img = parseResult(x, results)
-
-    cv2.rectangle(img, vertex1, vertex2, color, 1)
-
-    t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1, 1)[0]
-    vertex2 = vertex1[0] + t_size[0] + 3, vertex1[1] + t_size[1] + 4
-
-    cv2.rectangle(img, vertex1, vertex2, color, -1)
-
-    cv2.putText(img, label, (vertex1[0], vertex1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225, 255, 255], 1)
-    return img
-
-
 def parseResult(x, results):
+    """
+    Parse the results to get the detected object.
+
+    :param x: Tensor that contains the information about the detected object.
+    :param results: Current frame
+    """
     vertex1 = tuple(x[1:3].int()) # The first vertex
     vertex2 = tuple(x[3:5].int()) # The other vertex, which is opposite to c1
 
@@ -223,6 +207,7 @@ while cap.isOpened():
         print("FPS of the video is {:5.2f}".format( frames / (timeCost)))
 
 
+        # compare the length of list of detected objects for the previous frame and current frame
         if (len(previousList) > len(objectList)):
             objectList = previousList
         else:
