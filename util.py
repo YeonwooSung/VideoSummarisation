@@ -6,6 +6,9 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
 import cv2 
+import nltk
+from nltk.corpus import wordnet
+
 
 def unique(tensor):
     tensor_np = tensor.cpu().numpy()
@@ -94,6 +97,26 @@ def predict_transform(prediction, inp_dim, anchors, num_classes, CUDA = True):
     
     return prediction
 
+
+def process_wordnet(wordList : list, targetWord : str = 'Cook'):
+    if (len(list) is 0):
+        return None
+
+    target = wordnet.synset(targetWord)
+    similarityScore = 0
+    result = 0
+    index = 0
+    
+    for word in wordList:
+        index += 1
+        current_word = wordnet.synset(word)
+        current_simularity = target.wup_similarity(current_word)
+
+        if (current_simularity > similarityScore):
+            accuracyScore = current_simularity
+            result = '' #TODO
+
+
 def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
     conf_mask = (prediction[:,:,4] > confidence).float().unsqueeze(2)
     prediction = prediction*conf_mask
@@ -106,15 +129,12 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
     prediction[:,:,:4] = box_corner[:,:,:4]
     
     batch_size = prediction.size(0)
-
     write = False
-    
-
 
     for ind in range(batch_size):
         image_pred = prediction[ind]          #image Tensor
-       #confidence threshholding 
-       #NMS
+        #confidence threshholding 
+        #NMS
     
         max_conf, max_conf_score = torch.max(image_pred[:,5:5+ num_classes], 1)
         max_conf = max_conf.float().unsqueeze(1)
@@ -135,10 +155,9 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
         #Get the various classes detected in the image
         img_classes = unique(image_pred_[:,-1])  # -1 index holds the class index
         
-        
+        #TODO for loop to iterate detected classes
         for cls in img_classes:
             #perform NMS
-
         
             #get the detections with one particular class
             cls_mask = image_pred_*(image_pred_[:,-1] == cls).float().unsqueeze(1)
@@ -148,6 +167,9 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
             #sort the detections such that the entry with the maximum objectness
             #confidence is at the top
             conf_sort_index = torch.sort(image_pred_class[:,4], descending = True )[1]
+
+            #TODO conf_sort_index
+
             image_pred_class = image_pred_class[conf_sort_index]
             idx = image_pred_class.size(0)   #Number of detections
             
@@ -185,6 +207,7 @@ def write_results(prediction, confidence, num_classes, nms_conf = 0.4):
     except:
         return 0
     
+
 def letterbox_image(img, inp_dim):
     '''resize image with unchanged aspect ratio using padding'''
     img_w, img_h = img.shape[1], img.shape[0]
@@ -198,6 +221,7 @@ def letterbox_image(img, inp_dim):
     canvas[(h-new_h)//2:(h-new_h)//2 + new_h,(w-new_w)//2:(w-new_w)//2 + new_w,  :] = resized_image
     
     return canvas
+
 
 def prep_image(img, inp_dim):
     """
