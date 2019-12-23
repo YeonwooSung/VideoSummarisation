@@ -1,0 +1,65 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+
+\title{SH Project Report}
+\author{Yeonwoo Sung}
+\date{April 2020}
+
+\begin{document}
+
+\maketitle
+
+\newpage
+
+\addcontentsline{toc}{section}{Declaration}
+\section*{Declaration}
+I declare that the material submitted for assessment is my own work except where credit is explicitly given to others by citation or acknowledgement. 
+This work was performed during the current academic year except where otherwise stated.
+
+The main text of this project report is N words long, including project specification and plan.
+
+In submitting this project report to the University of St Andrews, I/we* give permission for it to be made 
+available for use in accordance with the regulations of the University Library. I/we* also give permission for 
+the title and abstract to be published and for copies of the report to be made and supplied at cost to any bona fide 
+library or research worker, and to be made available on the World Wide Web. I/we* retain the copyright in this work.
+
+\newpage
+
+\addcontentsline{toc}{section}{Abstract}
+\section*{Abstract}
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+
+According to the \hyperlink{ref1}{Forbes[1]}, more than 500 million hours of video are watched on YouTube every day. Many such statistics show how video content is growing and will remain the mainstream as a means of sharing information. We are already seeing a shift from copy and text to snapshot stories and visual posts (e.g. Instagram) for sharing content. Therefore, it would be possible to say that the personal videos, video lectures, video diaries, video messages on social networks and videos in many other domains are becoming to dominate other forms of information exchange. Consequently, better methods for video management, such as video summarization, are needed.
+
+Video summarization is a process of shortening a video by selecting keyframes or parts of videos that captures the main points in the video. This means that by using the video summarization tool, users should be able to reduce the video to a small number of still images called keyframes, where the keyframes should contain all key points of the video. Summarization has many use cases, with one of the most significant being the ability to gauge interest in content. For example, the users might want to summarize the online tutorial video, since they think the tutorial video contains too much information than they actually needed. Or, some users might want to summarize the video that they filmed, so that they could upload the summarized version on the social media and share it with other users.
+
+Apparently, the AI could play a key role with the video summarization, since the AI is playing large role in many other video editing tools, such as video classification tools that clasify the contents of the video for editing purposes. The main aim of this project is to implement a program that uses the neural networks to understand the semantic of the video, so that it could summarize the video properly. The key idea of this project is to use the object detection and action detection algorithms to understand the semantic of video.
+
+Recently, there have been many advances in using deep learning to increase the processing of images; the ability for AI to understand an image’s context has rapidly improved in accuracy. Similar techniques can be used to understand videos too, but this is a much more complex process. Video is not just a collection of a large number of frames or images, but videos are multi-dimensional - including audio, motion, and a time-series dimension. Each of these dimensions are key in understanding a video, and depending on what the summarization is targeting, different dimensions can be crucial. However, if the target videos are cooking videos, then the neural network might understand the semantic of the video by detecting the motions and objects in the videos, rather than comparing the frames or analysing the audio data.
+
+\section{Related Work}
+
+YOLO, which stands for You Only Look Once, is a real-time object detection system. To detect the objects in each frame of the video, the YOLOv3 is used. According to the \hypertarget{ref2}{YOLOv3 paper}, the YOLOv3 guarantees to detect objects within short time. With the COCO dataset, the YOLOv3 could handle 45 frames per second with 51\% of accuracy, where the RetinaNet could only handle 15 frames per second with 50\% of accuracy. Henceforth, it is possible to say that the YOLOv3 is extremely fast and accurate.
+
+\section{Methodology}
+
+\section{Design}
+
+\section{Implementation}
+
+\newpage
+
+\section{References}
+\hypertarget{ref1}{[1]} Forbes, "Video Marketing In 2018 Continues To Explode As Way To Reach Customers" [online]. Available :  \href{https://www.forbes.com/sites/tjmccue/2018/06/22/video-marketing-2018-trends-continues-to-explode-as-the-way-to-reach-customers}{https://www.forbes.com/sites/tjmccue/2018/06/22/video-marketing-2018-trends-continues-to-explode-as-the-way-to-reach-customers}
+\newline
+\hypertarget{ref2}{[2]} J. Redmon, A. Farhadi, "YOLOv3 : An Incremental Improvement", 2015. [online]. Available :  \url{https://pjreddie.com/media/files/papers/YOLOv3.pdf}
+
+\end{document}
