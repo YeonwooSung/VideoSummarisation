@@ -7,8 +7,7 @@ import numpy as np
 import cv2 
 from util import *
 import argparse
-import os 
-import os.path as osp
+import os
 from darknet import Darknet
 from detectedObject import DetectedObject, compareObjectLists
 import pickle as pkl
@@ -46,8 +45,9 @@ confidence = float(args.confidence)
 nms_thesh = float(args.nms_thresh)
 
 # constants
-numOfFrames_output = 3
+numOfFrames_output = 10
 numOfTurns = 5
+numOfUnselectedTurns_limit = 100 #TODO 100? 150? 200?
 
 # global variables to check the cost time
 numOfUnselectedTurns = 0
@@ -69,6 +69,9 @@ lastSelectedList = []
 print("Loading network.....")
 model = Darknet(args.cfgfile)
 model.load_weights(args.weightsfile)
+
+model_foodDomain = Darknet(args.cfgfile) #TODO config file
+model.load_weights(args.weightsfile) #TODO weight file
 print("Network successfully loaded")
 
 model.net_info["height"] = args.reso
@@ -80,9 +83,11 @@ assert inp_dim > 32
 #If there's a GPU availible, put the model on GPU
 if CUDA:
     model.cuda()
+    model_foodDomain.cuda()
 
 
 model.eval()  # Set the model in evaluation mode
+model_foodDomain.eval()
 
 
 def parseResult(x, results):
@@ -151,11 +156,13 @@ while cap.isOpened():
             im_dim = im_dim.cuda()
             img = img.cuda()
         with torch.no_grad():
-            output = model(Variable(img, volatile = True), CUDA)
-        output = write_results(output, confidence, num_classes, nms_conf = nms_thesh)
+            output_general = model(Variable(img), CUDA)
+            output_food = model_foodDomain(Variable(img), CUDA)
+        output_general = write_results(output_general, confidence, num_classes, nms_conf = nms_thesh)
+        output_food = write_results(output_food, confidence, num_classes, nms_conf=nms_thesh)
 
         # check the type of the output
-        if type(output) == int:
+        if type(output_general) == int or type(output_food) == int:
             frames += 1
             print("FPS of the video is {:5.4f}".format( frames / (time.time() - start)))
             cv2.imshow("frame", frame)
@@ -167,20 +174,33 @@ while cap.isOpened():
             continue
 
 
-        im_dim = im_dim.repeat(output.size(0), 1)
+        im_dim = im_dim.repeat(output_general.size(0), 1)
         scaling_factor = torch.min(416/im_dim,1)[0].view(-1,1)
 
-        # rescale the output
-        output[:,[1,3]] -= (inp_dim - scaling_factor*im_dim[:,0].view(-1,1)) / 2
-        output[:,[2,4]] -= (inp_dim - scaling_factor*im_dim[:,1].view(-1,1)) / 2
-        output[:,1:5] /= scaling_factor
+        # rescale the output - general YOLO
+        output_general[:, [1,3]] -= (inp_dim - scaling_factor*im_dim[:,0].view(-1,1)) / 2
+        output_general[:, [2,4]] -= (inp_dim - scaling_factor*im_dim[:,1].view(-1,1)) / 2
+        output_general[:, 1:5] /= scaling_factor
 
-        #TODO ???
-        for i in range(output.shape[0]):
-            output[i, [1,3]] = torch.clamp(output[i, [1,3]], 0.0, im_dim[i,0])
-            output[i, [2,4]] = torch.clamp(output[i, [2,4]], 0.0, im_dim[i,1])
+        # rescale the output - domain YOLO
+        output_food[:, [1,3]] -= (inp_dim - scaling_factor*im_dim[:,0].view(-1,1)) / 2
+        output_food[:, [2,4]] -= (inp_dim - scaling_factor*im_dim[:,1].view(-1,1)) / 2
+        output_food[:, 1:5] /= scaling_factor
+
+
+        # reshape the outputs by using the clamp function
+
+        for i in range(output_general.shape[0]):
+            output_general[i, [1,3]] = torch.clamp(output_general[i, [1,3]], 0.0, im_dim[i,0])
+            output_general[i, [2,4]] = torch.clamp(output_general[i, [2,4]], 0.0, im_dim[i,1])
+        
+        for i in range(output_food.shape[0]):
+            output_food[i, [1,3]] = torch.clamp(output_food[i, [1,3]], 0.0, im_dim[i,0])
+            output_food[i, [2,4]] = torch.clamp(output_food[i, [2,4]], 0.0, im_dim[i,1])
+
 
         classes = load_classes('data/coco.names')
+        classes_food = load_classes('data/food.names') #TODO
 
         colors = pkl.load(open("pallete", "rb")) #load the binary data of colors from the pallete
 
@@ -188,7 +208,9 @@ while cap.isOpened():
         f.write('\ncurrent frame: %d\n' % frames)
 
         # use the lambda to draw rectangles on the frames
-        list(map(lambda x: parseResult(x, frame), output))
+        list(map(lambda x: parseResult(x, frame), output_general))
+        #TODO do same thing for the output_food
+
 
         #TODO cv2.imshow("frame", frame)  # show the modified frame to the user
 
@@ -215,19 +237,29 @@ while cap.isOpened():
             previousList = objectList
 
 
-        if (frames < 3):
-            vWriter.write(frame)  # write the frame
-            
+        #TODO need to improve the codes below...
+
+        if (frames < numOfTurns):
+            vWriter.write(frame)
+            continue
         elif (frames % numOfTurns == 0):
+            vWriter.write(frame)  # write the frame
+
             # iterate the object lists, and check if the object
             if (compareObjectLists(objectList, lastSelectedList)):
                 vWriter.write(frame)  # write the frame
             else:
                 numOfUnselectedTurns += 1
 
-                if (numOfUnselectedTurns > 100):
+                if (numOfUnselectedTurns > numOfUnselectedTurns_limit):
                     vWriter.write(frame)  # write the frame
                     numOfUnselectedTurns = 0
+        else:
+            numOfUnselectedTurns += 1
+
+            if (numOfUnselectedTurns > numOfUnselectedTurns_limit):
+                vWriter.write(frame)  # write the frame
+                numOfUnselectedTurns = 0
 
     else:
         break
