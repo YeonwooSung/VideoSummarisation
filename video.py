@@ -60,6 +60,9 @@ CUDA = torch.cuda.is_available()
 num_classes = 80
 classes = load_classes("data/coco.names")
 
+num_classes_food = 100
+classes_food = load_classes("data/food100.names")
+
 # lists to store the detected objects
 objectList = []
 previousList = []
@@ -67,14 +70,17 @@ lastSelectedList = []
 
 #Set up the neural network
 print("Loading network.....")
+
 model = Darknet(args.cfgfile)
 model.load_weights(args.weightsfile)
 
-model_foodDomain = Darknet(args.cfgfile) #TODO config file
-model.load_weights(args.weightsfile) #TODO weight file
+model_foodDomain = Darknet('cfg/food100_tiny.cfg') #TODO
+model_foodDomain.load_weights('./food100_tiny_900.weights') #TODO
+
 print("Network successfully loaded")
 
 model.net_info["height"] = args.reso
+model_foodDomain.net_info["height"] = args.reso
 inp_dim = int(model.net_info["height"])
 
 assert inp_dim % 32 == 0 
@@ -86,25 +92,36 @@ if CUDA:
     model_foodDomain.cuda()
 
 
-model.eval()  # Set the model in evaluation mode
+# Set the model in evaluation mode
+model.eval()
 model_foodDomain.eval()
 
 
-def parseResult(x, results):
+def parseResult(x, results, target_classes):
     """
     Parse the results to get the detected object.
 
     :param x: Tensor that contains the information about the detected object.
     :param results: Current frame
+    :param target_classes: list of classes
     """
     vertex1 = tuple(x[1:3].int()) # The first vertex
     vertex2 = tuple(x[3:5].int()) # The other vertex, which is opposite to c1
 
     img = results
 
+    if vertex1 == vertex2:
+        return img
+
     cls = int(x[-1])
 
-    label = "{0}".format(classes[cls])
+    print('cls = ' + str(cls))
+
+    # to avoid the IndexError
+    if cls >= len(target_classes) or cls < 0:
+        return img
+
+    label = "{0}".format(target_classes[cls]) # get the label name
     
     obj = DetectedObject()
     obj.setLabel(label)
@@ -147,25 +164,33 @@ while cap.isOpened():
 
     # use if-else statement to check if there is remaining frame.
     if ret:
-        img = prep_image(frame, inp_dim)
+        img, orig_im, dim = prep_image(frame, inp_dim)
 
-        im_dim = frame.shape[1], frame.shape[0]
-        im_dim = torch.FloatTensor(im_dim).repeat(1,2)
+        im_dim = torch.FloatTensor(dim).repeat(1, 2)
 
         if CUDA:
             im_dim = im_dim.cuda()
             img = img.cuda()
+
+
         with torch.no_grad():
             output_general = model(Variable(img), CUDA)
+
+        print('output_general generated') #TODO debugging
+
+        with torch.no_grad():
             output_food = model_foodDomain(Variable(img), CUDA)
+
+        print('output generated') #TODO debugging message
+
         output_general = write_results(output_general, confidence, num_classes, nms_conf = nms_thesh)
-        output_food = write_results(output_food, confidence, num_classes, nms_conf=nms_thesh)
+        output_food = write_results(output_food, confidence, num_classes_food, nms_conf=nms_thesh)
 
         # check the type of the output
         if type(output_general) == int or type(output_food) == int:
             frames += 1
             print("FPS of the video is {:5.4f}".format( frames / (time.time() - start)))
-            cv2.imshow("frame", frame)
+            cv2.imshow("frame", orig_im)
             key = cv2.waitKey(1)
 
             # check if the user pressed the 'q' button to quit the program
@@ -174,33 +199,42 @@ while cap.isOpened():
             continue
 
 
-        im_dim = im_dim.repeat(output_general.size(0), 1)
-        scaling_factor = torch.min(416/im_dim,1)[0].view(-1,1)
+        im_dim_origin = im_dim
+
+        im_dim_general = im_dim.repeat(output_general.size(0), 1)
+        scaling_factor = torch.min(inp_dim/im_dim_general, 1)[0].view(-1, 1)
 
         # rescale the output - general YOLO
-        output_general[:, [1,3]] -= (inp_dim - scaling_factor*im_dim[:,0].view(-1,1)) / 2
-        output_general[:, [2,4]] -= (inp_dim - scaling_factor*im_dim[:,1].view(-1,1)) / 2
+        output_general[:, [1,3]] -= (inp_dim - scaling_factor*im_dim_general[:,0].view(-1,1)) / 2
+        output_general[:, [2,4]] -= (inp_dim - scaling_factor*im_dim_general[:,1].view(-1,1)) / 2
         output_general[:, 1:5] /= scaling_factor
 
+
+        im_dim = im_dim_origin
+
+        im_dim_food = im_dim.repeat(output_food.size(0), 1)
+        scaling_factor = torch.min(inp_dim/im_dim_food, 1)[0].view(-1, 1)
+
         # rescale the output - domain YOLO
-        output_food[:, [1,3]] -= (inp_dim - scaling_factor*im_dim[:,0].view(-1,1)) / 2
-        output_food[:, [2,4]] -= (inp_dim - scaling_factor*im_dim[:,1].view(-1,1)) / 2
+        output_food[:, [1,3]] -= (inp_dim - scaling_factor*im_dim_food[:,0].view(-1,1)) / 2
+        output_food[:, [2,4]] -= (inp_dim - scaling_factor*im_dim_food[:,1].view(-1,1)) / 2
         output_food[:, 1:5] /= scaling_factor
 
 
         # reshape the outputs by using the clamp function
 
         for i in range(output_general.shape[0]):
-            output_general[i, [1,3]] = torch.clamp(output_general[i, [1,3]], 0.0, im_dim[i,0])
-            output_general[i, [2,4]] = torch.clamp(output_general[i, [2,4]], 0.0, im_dim[i,1])
+            output_general[i, [1,3]] = torch.clamp(output_general[i, [1,3]], 0.0, im_dim_general[i,0])
+            output_general[i, [2,4]] = torch.clamp(output_general[i, [2,4]], 0.0, im_dim_general[i,1])
         
         for i in range(output_food.shape[0]):
-            output_food[i, [1,3]] = torch.clamp(output_food[i, [1,3]], 0.0, im_dim[i,0])
-            output_food[i, [2,4]] = torch.clamp(output_food[i, [2,4]], 0.0, im_dim[i,1])
+            output_food[i, [1, 3]] = torch.clamp(
+                output_food[i, [1, 3]], 0.0, im_dim_food[i, 0])
+            output_food[i, [2,4]] = torch.clamp(output_food[i, [2,4]], 0.0, im_dim_food[i,1])
 
 
         classes = load_classes('data/coco.names')
-        classes_food = load_classes('data/food.names') #TODO
+        classes_food = load_classes('data/food100.names')
 
         colors = pkl.load(open("pallete", "rb")) #load the binary data of colors from the pallete
 
@@ -208,8 +242,8 @@ while cap.isOpened():
         f.write('\ncurrent frame: %d\n' % frames)
 
         # use the lambda to draw rectangles on the frames
-        list(map(lambda x: parseResult(x, frame), output_general))
-        #TODO do same thing for the output_food
+        list(map(lambda x: parseResult(x, orig_im, classes), output_general))
+        list(map(lambda x: parseResult(x, orig_im, classes_food), output_food))
 
 
         #TODO cv2.imshow("frame", frame)  # show the modified frame to the user
@@ -240,25 +274,25 @@ while cap.isOpened():
         #TODO need to improve the codes below...
 
         if (frames < numOfTurns):
-            vWriter.write(frame)
+            vWriter.write(orig_im)
             continue
         elif (frames % numOfTurns == 0):
             vWriter.write(frame)  # write the frame
 
             # iterate the object lists, and check if the object
             if (compareObjectLists(objectList, lastSelectedList)):
-                vWriter.write(frame)  # write the frame
+                vWriter.write(orig_im)  # write the frame
             else:
                 numOfUnselectedTurns += 1
 
                 if (numOfUnselectedTurns > numOfUnselectedTurns_limit):
-                    vWriter.write(frame)  # write the frame
+                    vWriter.write(orig_im)  # write the frame
                     numOfUnselectedTurns = 0
         else:
             numOfUnselectedTurns += 1
 
             if (numOfUnselectedTurns > numOfUnselectedTurns_limit):
-                vWriter.write(frame)  # write the frame
+                vWriter.write(orig_im)  # write the frame
                 numOfUnselectedTurns = 0
 
     else:
