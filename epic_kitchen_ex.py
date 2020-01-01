@@ -8,6 +8,7 @@ import time
 import re
 import cv2
 import argparse
+import pandas as pd
 from darknet import Darknet
 from util import *
 from PIL import Image
@@ -75,32 +76,6 @@ for entrypoint in torch.hub.list(repo):
     print(torch.hub.help(repo, entrypoint))
 
 
-batch_size = 1
-segment_count = 8
-snippet_length = 1  # Number of frames composing the snippet, 1 for RGB, 5 for optical flow
-snippet_channels = 3  # Number of channels in a frame, 3 for RGB, 2 for optical flow
-height, width = 224, 224
-
-inputs = torch.randn(
-    [batch_size, segment_count, snippet_length, snippet_channels, height, width]
-)
-
-
-# The segment and snippet length and channel dimensions are collapsed into the channel dimension
-# Input shape: N x TC x H x W
-inputs = inputs.reshape((batch_size, -1, height, width))
-
-
-for model in [tsn, trn, mtrn, tsm]:
-    # You can get features out of the models
-    features = model.features(inputs)
-    # and then classify those features
-    verb_logits, noun_logits = model.logits(features)
-
-    # or just call the object to classify inputs in a single forward pass
-    verb_logits, noun_logits = model(inputs)
-    print(verb_logits.shape, noun_logits.shape)
-
 
 # file path of the video file
 videofile = '../Gordon_Ramsay_perfect_burger_tutorial.mp4'
@@ -116,10 +91,10 @@ transform = torchvision.transforms.Compose([
     transforms.GroupScale(tsn.scale_size),
     transforms.GroupCenterCrop(tsn.input_size),
     transforms.Stack(roll=(args.arch in ['BNInception', 'InceptionV3'])),
-    transforms.ToTorchFormatTensor(
-        div=(args.arch not in ['BNInception', 'InceptionV3'])),
+    transforms.ToTorchFormatTensor(div=(args.arch not in ['BNInception', 'InceptionV3'])),
     transforms.GroupNormalize(tsn.input_mean, tsn.input_std),
 ])
+
 
 def load_frames(frames, num_frames=8):
     if len(frames) >= num_frames:
@@ -129,26 +104,23 @@ def load_frames(frames, num_frames=8):
 
 
 
-print("Loading network.....")
-model = Darknet(args.cfgfile)
-model.load_weights(args.weightsfile)
-
-model.net_info["height"] = args.reso
-inp_dim = int(model.net_info["height"])
-
 # check if CUDA is available
 CUDA = torch.cuda.is_available()
 
-if CUDA:
-    model.cuda()
-
-assert inp_dim % 32 == 0
-assert inp_dim > 32
 
 frames = 0
 start = time.time()
 
+target_num_of_frames = 160
+
 imgs = []
+
+trn.eval()
+
+# load annotation files as data frames
+df_n = pd.read_csv('./epic_annotations/EPIC_noun_classes.csv')
+df_v = pd.read_csv('./epic_annotations/EPIC_verb_classes.csv')
+
 
 # use while loop to iterate the frames of the target video
 while cap.isOpened():
@@ -156,17 +128,13 @@ while cap.isOpened():
 
     # use if-else statement to check if there is remaining frame.
     if ret:
-        img = prep_image(frame, inp_dim)
-        
-        if CUDA:
-            img = img.cuda()
-
         cv2_im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         pil_im = Image.fromarray(cv2_im)
 
-        if len(imgs) < 16:
-            imgs.append(pil_im)
-        else:
+        imgs.append(pil_im)
+
+        # check the number of stored frames
+        if len(imgs) >= target_num_of_frames:
             input_frames = load_frames(imgs)
             print(input_frames)
             data = transform(input_frames)
@@ -179,16 +147,27 @@ while cap.isOpened():
                 with torch.no_grad():
                     input = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
 
-            features = tsn.features(inputs)
-            verb_logits, noun_logits = tsn.logits(features)
+            features = tsn.features(inputs) # extract features from the inputs
+            verb_logits, noun_logits = tsn.logits(features) # extract logits
 
-            print(verb_logits)
-            print(noun_logits)
+            # Get the probabilities and indices for the verb
+            h_x_verbs = torch.mean(F.softmax(verb_logits, 1), dim=0).data
+            probs_v, idx_v = h_x_verbs.sort(0, True)
 
-            #trn.classes??
+            # Get the probabilities and indices for the noun
+            h_x_nouns = torch.mean(F.softmax(noun_logits, 1), dim=0).data
+            probs_n, idx_n = h_x_nouns.sort(0, True)
 
-            #TODO
+
+            for i in range(0, 5):
+                #print('{:.3f} -> {}'.format(probs_v[i], categories[idx_v[i]]))
+                #print('{:.3f} -> {}'.format(probs_n[i], categories[idx_n[i]]))
+                print('{:.3f} -> {}'.format(probs_v[i], idx_v[i]))
+                print('{:.3f} -> {}'.format(probs_n[i], idx_n[i]))
+
+
+            #TODO improve the program by write some codes that do something with extracted probabilities and indices
+
             imgs = []
 
     frames += 1
-        #pil_im.show()  ->  이미지가 미친듯이 나옴
