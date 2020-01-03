@@ -48,6 +48,16 @@ def arg_parse():
     return parser.parse_args()
 
 
+batch_size = 1
+segment_count = 8
+snippet_length = 1  # Number of frames composing the snippet, 1 for RGB, 5 for optical flow
+snippet_channels = 3  # Number of channels in a frame, 3 for RGB, 2 for optical flow
+height, width = 224, 224
+
+inputs = torch.randn(
+    [batch_size, segment_count, snippet_length, snippet_channels, height, width]
+)
+
 
 repo = 'epic-kitchens/action-models'
 
@@ -121,6 +131,10 @@ trn.eval()
 df_n = pd.read_csv('./epic_annotations/EPIC_noun_classes.csv')
 df_v = pd.read_csv('./epic_annotations/EPIC_verb_classes.csv')
 
+# convert the class_key column to the list
+class_key_n = df_n['class_key'].tolist()
+class_key_v = df_v['class_key'].tolist()
+
 
 # use while loop to iterate the frames of the target video
 while cap.isOpened():
@@ -159,14 +173,17 @@ while cap.isOpened():
             probs_n, idx_n = h_x_nouns.sort(0, True)
 
 
+            print('Top5 verbs')
             for i in range(0, 5):
-                #print('{:.3f} -> {}'.format(probs_v[i], categories[idx_v[i]]))
-                #print('{:.3f} -> {}'.format(probs_n[i], categories[idx_n[i]]))
-                print('{:.3f} -> {}'.format(probs_v[i], idx_v[i]))
-                print('{:.3f} -> {}'.format(probs_n[i], idx_n[i]))
+                print('P(Verb) = {:.3f} -> verb = {}'.format(probs_v[i], class_key_v[idx_v[i]]))
+            
+            print('Top5 nouns')
+            for i in range(0, 5):
+                print('P(Noun) = {:.3f} -> noun = {}'.format(probs_n[i], class_key_n[idx_n[i]]))
 
+            print('The noun with the higest probability = {}'.format(class_key_n[idx_n[0]]))
+            print('The verb with the higest probability = {}'.format(class_key_v[idx_v[0]]))
 
-            #TODO improve the program by write some codes that do something with extracted probabilities and indices
 
             imgs = []
 
