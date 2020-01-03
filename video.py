@@ -22,7 +22,7 @@ def arg_parse():
 
     parser = argparse.ArgumentParser(description='YOLO v3 Detection Module')
     parser.add_argument("--bs", dest = "bs", help = "Batch size", default = 1)
-    parser.add_argument("--confidence", dest = "confidence", help = "Object Confidence to filter predictions", default = 0.5)
+    parser.add_argument("--confidence", dest = "confidence", help = "Object Confidence to filter predictions", default = 0.7)
     parser.add_argument("--nms_thresh", dest = "nms_thresh", help = "NMS Threshhold", default = 0.4)
     parser.add_argument("--cfg", dest = 'cfgfile', help = 
                         "Config file",
@@ -74,8 +74,8 @@ print("Loading network.....")
 model = Darknet(args.cfgfile)
 model.load_weights(args.weightsfile)
 
-model_foodDomain = Darknet('cfg/food100_tiny.cfg') #TODO
-model_foodDomain.load_weights('./food100_tiny_900.weights') #TODO
+model_foodDomain = Darknet('cfg/yolov3-food100.cfg') #TODO
+model_foodDomain.load_weights('./yolov3-food100.weights') #TODO
 
 print("Network successfully loaded")
 
@@ -176,12 +176,9 @@ while cap.isOpened():
         with torch.no_grad():
             output_general = model(Variable(img), CUDA)
 
-        print('output_general generated') #TODO debugging
-
         with torch.no_grad():
             output_food = model_foodDomain(Variable(img), CUDA)
 
-        print('output generated') #TODO debugging message
 
         output_general = write_results(output_general, confidence, num_classes, nms_conf = nms_thesh)
         output_food = write_results(output_food, confidence, num_classes_food, nms_conf=nms_thesh)
