@@ -253,12 +253,6 @@ while cap.isOpened():
         if key == ord('q'):
             break
 
-        frames += 1 # increase the number of frames that are processed
-
-        timeCost = time.time() - start
-        print(timeCost)
-        print("FPS of the video is {:5.2f}".format( frames / (timeCost)))
-
 
         # compare the length of list of detected objects for the previous frame and current frame
         if (len(previousList) > len(objectList)):
@@ -268,11 +262,11 @@ while cap.isOpened():
             previousList = objectList
 
 
+        #TODO----------------------------------------------------------------------------
         #TODO need to improve the codes below...
 
         if (frames < numOfTurns):
             vWriter.write(orig_im)
-            continue
         elif (frames % numOfTurns == 0):
             vWriter.write(frame)  # write the frame
 
@@ -291,6 +285,15 @@ while cap.isOpened():
             if (numOfUnselectedTurns > numOfUnselectedTurns_limit):
                 vWriter.write(orig_im)  # write the frame
                 numOfUnselectedTurns = 0
+        
+
+        #TODO----------------------------------------------------------------------------
+
+        frames += 1  # increase the number of frames that are processed
+
+        timeCost = time.time() - start
+        print(timeCost)
+        print("FPS of the video is {:5.2f}".format(frames / (timeCost)))
 
     else:
         break
