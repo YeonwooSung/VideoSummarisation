@@ -136,6 +136,22 @@ class_key_n = df_n['class_key'].tolist()
 class_key_v = df_v['class_key'].tolist()
 
 
+def extractProbsAndIndex(model):
+    features = model.features(inputs) # extract features from the inputs
+    verb_logits, noun_logits = model.logits(features) # extract logits
+
+    # Get the probabilities and indices for the verb
+    h_x_verbs = torch.mean(F.softmax(verb_logits, 1), dim=0).data
+    probs_v, idx_v = h_x_verbs.sort(0, True)
+
+    # Get the probabilities and indices for the noun
+    h_x_nouns = torch.mean(F.softmax(noun_logits, 1), dim=0).data
+    probs_n, idx_n = h_x_nouns.sort(0, True)
+
+    return probs_v, idx_v, probs_n, idx_n
+
+
+
 # use while loop to iterate the frames of the target video
 while cap.isOpened():
     ret, frame = cap.read()  # read the new frame
@@ -161,16 +177,8 @@ while cap.isOpened():
                 with torch.no_grad():
                     input = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
 
-            features = tsn.features(inputs) # extract features from the inputs
-            verb_logits, noun_logits = tsn.logits(features) # extract logits
 
-            # Get the probabilities and indices for the verb
-            h_x_verbs = torch.mean(F.softmax(verb_logits, 1), dim=0).data
-            probs_v, idx_v = h_x_verbs.sort(0, True)
-
-            # Get the probabilities and indices for the noun
-            h_x_nouns = torch.mean(F.softmax(noun_logits, 1), dim=0).data
-            probs_n, idx_n = h_x_nouns.sort(0, True)
+            probs_v, idx_v, probs_n, idx_n = extractProbsAndIndex(tsm)
 
 
             print('Top5 verbs')
