@@ -13,6 +13,9 @@ from darknet import Darknet
 from util import *
 from PIL import Image
 import transforms
+import nltk
+from nltk.corpus import wordnet as wn
+from random import randrange
 
 
 
@@ -136,7 +139,7 @@ class_key_n = df_n['class_key'].tolist()
 class_key_v = df_v['class_key'].tolist()
 
 
-def extractProbsAndIndex(model):
+def extractProbsAndIndex(model, inputs):
     features = model.features(inputs) # extract features from the inputs
     verb_logits, noun_logits = model.logits(features) # extract logits
 
@@ -150,6 +153,87 @@ def extractProbsAndIndex(model):
 
     return probs_v, idx_v, probs_n, idx_n
 
+
+
+def printVerbsAndNounsWithProbs(probs_v, idx_v, probs_n, idx_n):
+    noun_list = []
+    noun_synset_list = []
+
+    print('Top5 verbs')
+    for i in range(0, 5):
+        print('P(Verb) = {:.3f} -> verb = {}'.format(probs_v[i], class_key_v[idx_v[i]]))
+
+    print('Top5 nouns')
+    for i in range(0, 5):
+        current_noun = class_key_n[idx_n[i]]
+        print('P(Noun) = {:.3f} -> noun = {}'.format(probs_n[i], current_noun))
+        noun_list.append(current_noun)
+        noun_synset_list.append(wn.synset('{}.n.1'.format(current_noun)))
+    
+
+    similarity_list = []
+    for cur_n, cur_synset in zip(noun_list, noun_synset_list):
+        total_sim = 0
+        
+        for target_n, target_synset in zip(noun_list, noun_synset_list):
+            if cur_n is target_n:
+                continue
+
+            cur_sim = cur_synset.path_similarity(target_synset)
+            total_sim += cur_sim
+        
+        similarity_list.append(total_sim)
+    
+    min_val = similarity_list[0]
+    min_idx = 0
+
+    # use for loop to iterate similarity_list
+    for i in range(1, len(similarity_list)):
+        cur_val = similarity_list[i]
+
+        if min_val > cur_val:
+            min_idx = i
+            min_val = cur_val
+
+    # If the min_idx is 4 or 5, and probability value of the probs_n[min_idx] is less than (probs_n[0] / 2), remove this noun from the list.
+    if min_idx > 3 and (probs_n[min_idx] < (probs_n[0] / 2)):
+        noun_list.pop(min_idx)
+
+    print('The noun with the higest probability = {}'.format(class_key_n[idx_n[0]]))
+    print('The verb with the higest probability = {}'.format(class_key_v[idx_v[0]]))
+
+    return class_key_v[idx_v[0]], probs_v[0], noun_list
+
+
+def mergeSubResults_verb(verb1, verb2, verb3, p1, p2, p3):
+    if verb1 is verb2:
+        if verb2 is verb3:
+            return verb1
+        else:
+            # If verb1== verb2 but verb1 != verb3, then check the probabilties to find the most suitable verb
+            if p3 > 0.8 and p2 < 0.5 and p1 < 0.5:
+                return verb3
+            else:
+                return verb2
+    elif verb2 is verb3:
+        #TODO
+        if p1 > 0.8 and p2 < 0.5 and p3 < 0.5:
+            return verb1
+        else::
+            return verb2
+    else:
+        # If all verbs all different, then compare the probabilities to find the most suitable verb
+        if p1 > p2 and p1 > p3:
+            return verb1
+        elif p2 > p1 and p2 > p3:
+            return verb2
+        elif p3 > p1 and p3 > p2:
+            return verb3
+        else:
+            # If there is no biggest probability value, then choose random one.
+            v_list = [verb1, verb2, verb3]
+            rand_val = randrange(3) + 1
+            return v_list[rand_val]
 
 
 # use while loop to iterate the frames of the target video
@@ -169,29 +253,28 @@ while cap.isOpened():
             print(input_frames)
             data = transform(input_frames)
 
-            input = ''
             if CUDA:
                 with torch.no_grad():
-                    input = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0).cuda())
+                    inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0).cuda())
             else:
                 with torch.no_grad():
-                    input = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
+                    inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
 
 
-            probs_v, idx_v, probs_n, idx_n = extractProbsAndIndex(tsm)
+            probs_v1, idx_v1, probs_n1, idx_n1 = extractProbsAndIndex(tsm, inputs)
+            probs_v2, idx_v2, probs_n2, idx_n2 = extractProbsAndIndex(tsn, inputs)
+            probs_v3, idx_v3, probs_n3, idx_n3 = extractProbsAndIndex(tsn, inputs)
 
+            # print out probabilities of detected verbs and nouns
+            print('TSM')
+            verb1, probs_v1, noun_list1 = printVerbsAndNounsWithProbs(probs_v1, idx_v1, probs_n1, idx_n1)
+            print('\nTSN')
+            verb2, probs_v2, noun_list2 = printVerbsAndNounsWithProbs(probs_v2, idx_v2, probs_n2, idx_n2)
+            print('\nTSN')
+            verb3, probs_v3, noun_list3 = printVerbsAndNounsWithProbs(probs_v3, idx_v3, probs_n3, idx_n3)
 
-            print('Top5 verbs')
-            for i in range(0, 5):
-                print('P(Verb) = {:.3f} -> verb = {}'.format(probs_v[i], class_key_v[idx_v[i]]))
-            
-            print('Top5 nouns')
-            for i in range(0, 5):
-                print('P(Noun) = {:.3f} -> noun = {}'.format(probs_n[i], class_key_n[idx_n[i]]))
-
-            print('The noun with the higest probability = {}'.format(class_key_n[idx_n[0]]))
-            print('The verb with the higest probability = {}'.format(class_key_v[idx_v[0]]))
-
+            verb_final = mergeSubResults_verb(verb1, verb2, verb3, probs_v1, probs_v2, probs_v3)
+            #TODO nouns!! (merge lists)
 
             imgs = []
 
