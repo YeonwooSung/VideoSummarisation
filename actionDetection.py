@@ -219,7 +219,7 @@ def mergeSubResults_verb(verb1, verb2, verb3, p1, p2, p3):
         #TODO
         if p1 > 0.8 and p2 < 0.5 and p3 < 0.5:
             return verb1
-        else::
+        else:
             return verb2
     else:
         # If all verbs all different, then compare the probabilities to find the most suitable verb
