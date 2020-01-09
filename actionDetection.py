@@ -122,6 +122,7 @@ CUDA = torch.cuda.is_available()
 
 
 frames = 0
+prev_idx = 0
 start = time.time()
 
 target_num_of_frames = 160
@@ -167,9 +168,18 @@ def printVerbsAndNounsWithProbs(probs_v, idx_v, probs_n, idx_n):
     for i in range(0, 5):
         current_noun = class_key_n[idx_n[i]]
         print('P(Noun) = {:.3f} -> noun = {}'.format(probs_n[i], current_noun))
-        noun_list.append(current_noun)
-        noun_synset_list.append(wn.synset('{}.n.1'.format(current_noun)))
-    
+
+        try:
+            if ':' in current_noun:
+                temp_n = current_noun.split(':')[0]
+                noun_synset_list.append(wn.synset('{}.n.1'.format(temp_n)))
+                noun_list.append(current_noun)
+
+            else:
+                noun_synset_list.append(wn.synset('{}.n.1'.format(current_noun)))
+                noun_list.append(current_noun)
+        except:
+            print('Error in wordnet!')
 
     similarity_list = []
     for cur_n, cur_synset in zip(noun_list, noun_synset_list):
@@ -184,6 +194,8 @@ def printVerbsAndNounsWithProbs(probs_v, idx_v, probs_n, idx_n):
         
         similarity_list.append(total_sim)
     
+
+    # local variables to find the noun whose total sum of the similarity scores with other nouns is the lowest.
     min_val = similarity_list[0]
     min_idx = 0
 
@@ -236,9 +248,103 @@ def mergeSubResults_verb(verb1, verb2, verb3, p1, p2, p3):
             return v_list[rand_val]
 
 
+def mergeLists(first_list, second_list):
+    in_first = set(first_list)
+    in_second = set(second_list)
+    in_second_but_not_in_first = in_second - in_first
+    result = first_list + list(in_second_but_not_in_first)
+    return result
+
+
+def mergeSubResults_nouns(n1, n2, n3):
+    """
+    Merge the elements of lists that contain the detected nouns.
+    """
+    temp_res = mergeLists(n1, n2)
+    res = mergeLists(temp_res, n3)
+    return res
+
+
+def findBestNoun(n1, n2, n3 ,prob_n1, prob_n2, prob_n3):
+    if n1 == n2:
+        if n2 == n3:
+            return n1
+        else:
+            if prob_n1 < 0.5 and prob_n2 < 0.5 and prob_n3 > 0.8:
+                return n3
+            return n1
+    else:
+        if n2 == n3:
+            if prob_n2 < 0.5 and prob_n3 < 0.5 and prob_n1 > 0.8:
+                return n1
+            return n2
+        else:
+            if prob_n1 > prob_n2 and prob_n1 > prob_n3:
+                return n1
+            elif prob_n2 > prob_n1 and prob_n2 > prob_n3:
+                return n2
+            elif prob_n3 > prob_n1 and prob_n3 > prob_n2:
+                return n3
+            else:
+                # If there is no biggest probability value, then choose random one.
+                n_list = [n1, n2, n3]
+                rand_val = randrange(3) + 1
+                return n_list[rand_val]
+
+
+def processActionDetection():
+    input_frames = load_frames(imgs)
+    print(input_frames)
+    data = transform(input_frames)
+
+    if CUDA:
+        with torch.no_grad():
+            inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0).cuda())
+    else:
+        with torch.no_grad():
+            inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
+
+
+    probs_v1, idx_v1, probs_n1, idx_n1 = extractProbsAndIndex(tsm, inputs)
+    probs_v2, idx_v2, probs_n2, idx_n2 = extractProbsAndIndex(tsn, inputs)
+    probs_v3, idx_v3, probs_n3, idx_n3 = extractProbsAndIndex(tsn, inputs)
+
+    # print out probabilities of detected verbs and nouns
+    print('TSM')
+    verb1, probs_v1, noun_list1 = printVerbsAndNounsWithProbs(probs_v1, idx_v1, probs_n1, idx_n1)
+    print('\nTSN')
+    verb2, probs_v2, noun_list2 = printVerbsAndNounsWithProbs(probs_v2, idx_v2, probs_n2, idx_n2)
+    print('\nTSN')
+    verb3, probs_v3, noun_list3 = printVerbsAndNounsWithProbs(probs_v3, idx_v3, probs_n3, idx_n3)
+
+    # get final verb
+    verb_final = mergeSubResults_verb(verb1, verb2, verb3, probs_v1, probs_v2, probs_v3)
+
+    # get best noun
+    best_noun = findBestNoun(noun_list1[0], noun_list2[0], noun_list3[0], probs_n1[0], probs_n2[0], probs_n3[0])
+
+    print('[LOG] final verb = {0}\r\n[LOG] final noun = {1}'.format(verb_final, best_noun))
+
+    # get final noun list
+    noun_list_res = mergeSubResults_nouns(noun_list1, noun_list2, noun_list3)
+
+    f.write('from {0} to {1} :\r\n'.format(prev_idx, frames))
+    f.write('v={}\r\n'.format(verb_final))
+    f.write('n={}\r\n'.format(len(noun_list_res)))
+
+    for noun_final in noun_list_res:
+        f.write('{}\r\n'.format(noun_final))
+
+
+# open the file stream instance to write a file
+f = open('actionDetection_output.txt', 'w+')
+
+
 # use while loop to iterate the frames of the target video
 while cap.isOpened():
     ret, frame = cap.read()  # read the new frame
+
+    print('[DEBUG] frames={}'.format(frames))
 
     # use if-else statement to check if there is remaining frame.
     if ret:
@@ -249,33 +355,20 @@ while cap.isOpened():
 
         # check the number of stored frames
         if len(imgs) >= target_num_of_frames:
-            input_frames = load_frames(imgs)
-            print(input_frames)
-            data = transform(input_frames)
-
-            if CUDA:
-                with torch.no_grad():
-                    inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0).cuda())
-            else:
-                with torch.no_grad():
-                    inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
-
-
-            probs_v1, idx_v1, probs_n1, idx_n1 = extractProbsAndIndex(tsm, inputs)
-            probs_v2, idx_v2, probs_n2, idx_n2 = extractProbsAndIndex(tsn, inputs)
-            probs_v3, idx_v3, probs_n3, idx_n3 = extractProbsAndIndex(tsn, inputs)
-
-            # print out probabilities of detected verbs and nouns
-            print('TSM')
-            verb1, probs_v1, noun_list1 = printVerbsAndNounsWithProbs(probs_v1, idx_v1, probs_n1, idx_n1)
-            print('\nTSN')
-            verb2, probs_v2, noun_list2 = printVerbsAndNounsWithProbs(probs_v2, idx_v2, probs_n2, idx_n2)
-            print('\nTSN')
-            verb3, probs_v3, noun_list3 = printVerbsAndNounsWithProbs(probs_v3, idx_v3, probs_n3, idx_n3)
-
-            verb_final = mergeSubResults_verb(verb1, verb2, verb3, probs_v1, probs_v2, probs_v3)
-            #TODO nouns!! (merge lists)
+            processActionDetection()
 
             imgs = []
+            prev_idx = frames + 1
+    
+    else:
+        break
 
     frames += 1
+
+
+if len(imgs) is not 0:
+    processActionDetection()
+
+
+f.close()
+cap.release()
