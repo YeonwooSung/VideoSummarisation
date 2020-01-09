@@ -11,6 +11,8 @@ from util import count_parameters as count
 from util import convert2cpu as cpu
 from util import predict_transform
 
+
+
 class test_net(nn.Module):
     def __init__(self, num_layers, input_size):
         super(test_net, self).__init__()
@@ -296,7 +298,6 @@ class Darknet(nn.Module):
         self.seen = 0
 
         
-        
     def get_blocks(self):
         return self.blocks
     
@@ -470,7 +471,6 @@ class Darknet(nn.Module):
                 conv.weight.data.copy_(conv_weights)
                 
     def save_weights(self, savedfile, cutoff = 0):
-            
         if cutoff <= 0:
             cutoff = len(self.blocks) - 1
         
@@ -508,21 +508,9 @@ class Darknet(nn.Module):
                     cpu(bn.running_mean).numpy().tofile(fp)
                     cpu(bn.running_var).numpy().tofile(fp)
                 
-            
                 else:
                     cpu(conv.bias.data).numpy().tofile(fp)
-                
                 
                 #Let us save the weights for the Convolutional layers
                 cpu(conv.weight.data).numpy().tofile(fp)
                
-
-
-
-#
-#dn = Darknet('cfg/yolov3.cfg')
-#dn.load_weights("yolov3.weights")
-#inp = get_test_input()
-#a, interms = dn(inp)
-#dn.eval()
-#a_i, interms_i = dn(inp)
