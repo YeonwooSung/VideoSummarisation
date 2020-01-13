@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+@original_author: ayooshmac
+@url: "https://github.com/ayooshkathuria/pytorch-yolo-v3"
+@modified: Yeonwoo Sung
+"""
+
 from __future__ import division
 
 import torch
@@ -163,8 +171,7 @@ def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
     prediction = prediction*conf_mask
 
     try:
-        ind_nz = torch.nonzero(
-            prediction[:, :, 4]).transpose(0, 1).contiguous()
+        ind_nz = torch.nonzero(prediction[:, :, 4]).transpose(0, 1).contiguous()
     except:
         return 0
 
@@ -187,10 +194,11 @@ def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
         #Get the class having maximum score, and the index of that class
         #Get rid of num_classes softmax scores
         #Add the class index and the class score of class having maximum score
-        max_conf, max_conf_score = torch.max(
-            image_pred[:, 5:5 + num_classes], 1)
+        max_conf, max_conf_score = torch.max(image_pred[:, 5:5 + num_classes], 1)
+
         max_conf = max_conf.float().unsqueeze(1)
         max_conf_score = max_conf_score.float().unsqueeze(1)
+
         seq = (image_pred[:, :5], max_conf, max_conf_score)
         image_pred = torch.cat(seq, 1)
 
@@ -215,8 +223,7 @@ def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
 
             #sort the detections such that the entry with the maximum objectness
             #confidence is at the top
-            conf_sort_index = torch.sort(
-                image_pred_class[:, 4], descending=True)[1]
+            conf_sort_index = torch.sort(image_pred_class[:, 4], descending=True)[1]
             image_pred_class = image_pred_class[conf_sort_index]
             idx = image_pred_class.size(0)
 
@@ -227,8 +234,7 @@ def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
                     #Get the IOUs of all boxes that come after the one we are looking at
                     #in the loop
                     try:
-                        ious = bbox_iou(image_pred_class[i].unsqueeze(
-                            0), image_pred_class[i+1:])
+                        ious = bbox_iou(image_pred_class[i].unsqueeze(0), image_pred_class[i+1:])
                     except ValueError:
                         break
 
@@ -240,10 +246,8 @@ def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
                     image_pred_class[i+1:] *= iou_mask
 
                     #Remove the non-zero entries
-                    non_zero_ind = torch.nonzero(
-                        image_pred_class[:, 4]).squeeze()
-                    image_pred_class = image_pred_class[non_zero_ind].view(
-                        -1, 7)
+                    non_zero_ind = torch.nonzero(image_pred_class[:, 4]).squeeze()
+                    image_pred_class = image_pred_class[non_zero_ind].view(-1, 7)
 
             #Concatenate the batch_id of the image to the detection
             #this helps us identify which image does the detection correspond to
@@ -251,9 +255,10 @@ def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
             #the batch_dim is flattened
             #batch is identified by extra batch column
 
-            batch_ind = image_pred_class.new(
-                image_pred_class.size(0), 1).fill_(ind)
+            batch_ind = image_pred_class.new(image_pred_class.size(0), 1).fill_(ind)
+
             seq = batch_ind, image_pred_class
+
             if not write:
                 output = torch.cat(seq, 1)
                 write = True
@@ -264,12 +269,6 @@ def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
     return output
 
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Mar 24 00:12:16 2018
-@author: ayooshmac
-"""
 
 
 def predict_transform_half(prediction, inp_dim, anchors, num_classes, CUDA=True):

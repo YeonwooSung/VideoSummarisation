@@ -1,3 +1,11 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+@original_author: ayooshmac
+@url: "https://github.com/ayooshkathuria/pytorch-yolo-v3"
+@modified: Yeonwoo Sung
+"""
+
 from __future__ import division
 
 import torch 
