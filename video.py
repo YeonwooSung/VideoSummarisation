@@ -47,10 +47,8 @@ nms_thesh = float(args.nms_thresh)
 # constants
 numOfFrames_output = 10
 numOfTurns = 5
-numOfUnselectedTurns_limit = 100 #TODO 100? 150? 200?
 
 # global variables to check the cost time
-numOfUnselectedTurns = 0
 start = 0
 
 # check if the CUDA is available
@@ -262,32 +260,13 @@ while cap.isOpened():
             previousList = objectList
 
 
-        #TODO----------------------------------------------------------------------------
-        #TODO need to improve the codes below...
-
         if (frames < numOfTurns):
             vWriter.write(orig_im)
         elif (frames % numOfTurns == 0):
-            vWriter.write(frame)  # write the frame
-
             # iterate the object lists, and check if the object
-            if (compareObjectLists(objectList, lastSelectedList)):
+            if (not compareObjectLists(objectList, lastSelectedList)):
                 vWriter.write(orig_im)  # write the frame
-            else:
-                numOfUnselectedTurns += 1
 
-                if (numOfUnselectedTurns > numOfUnselectedTurns_limit):
-                    vWriter.write(orig_im)  # write the frame
-                    numOfUnselectedTurns = 0
-        else:
-            numOfUnselectedTurns += 1
-
-            if (numOfUnselectedTurns > numOfUnselectedTurns_limit):
-                vWriter.write(orig_im)  # write the frame
-                numOfUnselectedTurns = 0
-        
-
-        #TODO----------------------------------------------------------------------------
 
         frames += 1  # increase the number of frames that are processed
 
