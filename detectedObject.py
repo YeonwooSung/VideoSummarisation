@@ -1,4 +1,5 @@
 from __future__ import division
+import math
 
 
 class DetectedObject():
@@ -6,6 +7,8 @@ class DetectedObject():
         super().__init__()
         self.vertex1 = []
         self.vertex2 = []
+        self.midpoint = []
+        self.size = 0
         self.label = ''
 
     def setVertices(self, vertex1, vertex2):
@@ -24,6 +27,18 @@ class DetectedObject():
     def getVertex2(self):
         return self.vertex2
     
+    def getSizeAndMidPoint(self):
+        if (self.size != 0 and len(self.midpoint) != 0):
+            return self.size, self.midpoint
+        
+        mid_0 = (self.vertex1[0] + self.vertex2[0]) / 2
+        mid_1 = (self.vertex1[1] + self.vertex2[1]) / 2
+        self.midpoint = [mid_0, mid_1]
+        # calculate the Euclidean distance between 2 vertices
+        self.size = math.sqrt(pow((self.vertex2[0] - self.vertex1[0]), 2) + pow((self.vertex2[1] - self.vertex1[1]), 2))
+
+        return self.size, self.midpoint
+
     def getInfoString(self):
         return '{0} ({1}, {2}) ({3}, {4})'.format(self.label, self.vertex1[0], self.vertex1[1], self.vertex2[0], self.vertex2[1])
 
@@ -36,34 +51,62 @@ def compareObjectLists(list1: list = [], list2: list = []) -> bool:
     :param list2: the other list of DetectedObject type instances.
     :return: (bool)
     """
-    if (list2 is []):
+    if (len(list2) is 0):
         return False
+    if (len(list1) is 0):
+        return True
+
 
     checker = True
 
-    for obj in list1:
-        label = obj.getLabel()
-        vertex1 = obj.getVertex1()
-        vertex2 = obj.getVertex2()
-
+    # use nested for loop to compare object lists
+    for obj1 in list1:
+        label1 = obj1.getLabel()
         checker2 = False
 
-        for o in list2:
-            label2 = o.getLabel()
-            v1 = o.getVertex1()
-            v2 = o.getVertex2()
-
-            if (compareVertices(v1, vertex1) and compareVertices(v2, vertex2)):
-                checker2 = True
+        for obj2 in list2:
+            label2 = obj2.getLabel()
+            if (compareDetectedObjects(obj1, obj2)):
+                # compare the label to check if they are same object
+                if (label1 == label2):
+                    checker2 = True #TODO
                 break
-        
+
         checker = checker and checker2
     
-    return checker
+    return (not checker)
 
 
 def compareVertices(vertex1: tuple, vertex2: tuple):
-    if (vertex1 == vertex2):
-        return True
-    
+    return (vertex1[0] == vertex2[0] and vertex1[1] == vertex2[1])
+
+
+def compareDetectedObjects(obj1, obj2):
+    """
+    Compare the middle point and size of 2 objects.
+
+    :param obj1: The first object
+    :param obj2: The second object
+    :return: Bool - Returns True if the 2 given objects are in the same bounding box.
+    """
+    # get size and middle point of each object
+    size1, midpoint1 = obj1.getSizeAndMidPoint()
+    size2, midpoint2 = obj2.getSizeAndMidPoint()
+
+    sizeLimit = 5
+
+    # compare the middle points
+    if (compareVertices(midpoint1, midpoint2)):
+        if (size1 == size2):
+            return True
+        else:
+            bigger = size1
+            smaller = size2
+            
+            if size2 >= size1:
+                bigger = size2
+                smaller = size1
+            if (bigger - sizeLimit) < smaller:
+                return True
+
     return False
