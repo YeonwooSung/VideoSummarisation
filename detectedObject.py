@@ -49,7 +49,7 @@ def compareObjectLists(list1: list = [], list2: list = []) -> bool:
 
     :param list1: the first list of DetectedObject type instances.
     :param list2: the other list of DetectedObject type instances.
-    :return: (bool)
+    :return: (bool) - If there are some differences between 2 lists, then returns True. Otherwise, returns False.
     """
     if (len(list2) is 0):
         return False
@@ -69,7 +69,7 @@ def compareObjectLists(list1: list = [], list2: list = []) -> bool:
             if (compareDetectedObjects(obj1, obj2)):
                 # compare the label to check if they are same object
                 if (label1 == label2):
-                    checker2 = True #TODO
+                    checker2 = True
                 break
 
         checker = checker and checker2
@@ -87,7 +87,7 @@ def compareDetectedObjects(obj1, obj2):
 
     :param obj1: The first object
     :param obj2: The second object
-    :return: Bool - Returns True if the 2 given objects are in the same bounding box.
+    :return: Bool - Returns True if the 2 given objects are in the same bounding box. Otherwise, returns False.
     """
     # get size and middle point of each object
     size1, midpoint1 = obj1.getSizeAndMidPoint()
