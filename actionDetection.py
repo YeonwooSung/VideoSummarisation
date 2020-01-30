@@ -144,11 +144,11 @@ def extractProbsAndIndex(model, inputs):
     features = model.features(inputs) # extract features from the inputs
     verb_logits, noun_logits = model.logits(features) # extract logits
 
-    # Get the probabilities and indices for the verb
+    # Get the probabilities and indexes for the verb
     h_x_verbs = torch.mean(F.softmax(verb_logits, 1), dim=0).data
     probs_v, idx_v = h_x_verbs.sort(0, True)
 
-    # Get the probabilities and indices for the noun
+    # Get the probabilities and indexes for the noun
     h_x_nouns = torch.mean(F.softmax(noun_logits, 1), dim=0).data
     probs_n, idx_n = h_x_nouns.sort(0, True)
 
@@ -305,16 +305,16 @@ def processActionDetection():
             inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
 
 
-    probs_v1, idx_v1, probs_n1, idx_n1 = extractProbsAndIndex(tsm, inputs)
-    probs_v2, idx_v2, probs_n2, idx_n2 = extractProbsAndIndex(tsn, inputs)
-    probs_v3, idx_v3, probs_n3, idx_n3 = extractProbsAndIndex(tsn, inputs)
+    probs_v1, idx_v1, probs_n1, idx_n1 = extractProbsAndIndex(tsn, inputs)
+    probs_v2, idx_v2, probs_n2, idx_n2 = extractProbsAndIndex(tsm, inputs)
+    probs_v3, idx_v3, probs_n3, idx_n3 = extractProbsAndIndex(trn, inputs)
 
     # print out probabilities of detected verbs and nouns
-    print('TSM')
+    print('TSN')
     verb1, probs_v1, noun_list1 = printVerbsAndNounsWithProbs(probs_v1, idx_v1, probs_n1, idx_n1)
-    print('\nTSN')
+    print('\nTSM')
     verb2, probs_v2, noun_list2 = printVerbsAndNounsWithProbs(probs_v2, idx_v2, probs_n2, idx_n2)
-    print('\nTSN')
+    print('\nTRN')
     verb3, probs_v3, noun_list3 = printVerbsAndNounsWithProbs(probs_v3, idx_v3, probs_n3, idx_n3)
 
     # get final verb

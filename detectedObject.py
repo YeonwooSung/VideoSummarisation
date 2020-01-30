@@ -14,6 +14,7 @@ class DetectedObject():
     def setVertices(self, vertex1, vertex2):
         self.vertex1 = vertex1
         self.vertex2 = vertex2
+        self.calculateMidPointAndSize()
 
     def setLabel(self, label):
         self.label = label
@@ -26,17 +27,18 @@ class DetectedObject():
     
     def getVertex2(self):
         return self.vertex2
-    
-    def getSizeAndMidPoint(self):
-        if (self.size != 0 and len(self.midpoint) != 0):
-            return self.size, self.midpoint
-        
+
+    def calculateMidPointAndSize(self):
         mid_0 = (self.vertex1[0] + self.vertex2[0]) / 2
         mid_1 = (self.vertex1[1] + self.vertex2[1]) / 2
         self.midpoint = [mid_0, mid_1]
         # calculate the Euclidean distance between 2 vertices
         self.size = math.sqrt(pow((self.vertex2[0] - self.vertex1[0]), 2) + pow((self.vertex2[1] - self.vertex1[1]), 2))
 
+    def getSizeAndMidPoint(self):
+        if (self.size != 0 and len(self.midpoint) != 0):
+            return self.size, self.midpoint
+        self.calculateMidPointAndSize()
         return self.size, self.midpoint
 
     def getInfoString(self):
@@ -110,3 +112,21 @@ def compareDetectedObjects(obj1, obj2):
                 return True
 
     return False
+
+
+def mergeDetectedObjectLists(list1, list2):
+    """
+    Merge 2 list of detected objects, and return the result.
+    :param list1: The list that contains the detected objects that are detected by the general YOLO
+    :param list2: The list that contains the detected objects that are detected by the YOLO model that is retrained with the domain dataset.
+    """
+    newList = []
+    newList.extend(list1)
+
+    for obj1 in list1:
+        for obj2 in list2:
+            sameBoundingBox = compareDetectedObjects(obj1, obj2)
+            if (not sameBoundingBox):
+                newList.append(obj2)
+
+    return newList
