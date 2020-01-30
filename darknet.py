@@ -3,7 +3,6 @@
 """
 @original_author: ayooshmac
 @url: "https://github.com/ayooshkathuria/pytorch-yolo-v3"
-@modified: Yeonwoo Sung
 """
 
 from __future__ import division
