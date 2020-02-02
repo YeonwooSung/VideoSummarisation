@@ -26,7 +26,8 @@ def arg_parse():
 
     parser = argparse.ArgumentParser(description='EPIC Kitchen dataset testing')
 
-    parser.add_argument('--video_file', type=str, default='')
+    #TODO
+    parser.add_argument('--video_file', type=str, default='../Gordon_Ramsay_perfect_burger_tutorial.mp4')
 
     parser.add_argument('--frame_folder', type=str, default='')
     parser.add_argument('--modality', type=str, default='RGB',
@@ -90,13 +91,13 @@ for entrypoint in torch.hub.list(repo):
 
 
 
-# file path of the video file
-videofile = '../Gordon_Ramsay_perfect_burger_tutorial.mp4'
-
 cap = cv2.VideoCapture(videofile)
 
 
 args = arg_parse()
+
+# file path of the video file
+videofile = args.video_file
 
 
 # Initialize frame transforms.

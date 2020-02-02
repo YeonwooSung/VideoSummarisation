@@ -102,5 +102,5 @@ class_id = 99, name = goya-chanpuru, ap = 50.00%   	 (TP = 5, FP = 5)
  for conf_thresh = 0.25, TP = 0, FP = 1494, FN = 1436, average IoU = 0.00 % 
 
  IoU threshold = 50 %, used Area-Under-Curve for each unique Recall 
- mean average precision (mAP@0.50) = 0.000000, or 0.00 % 
+ mean average precision (mAP@0.50) = 0.301300, or 30.13 % 
 Total Detection Time: 62169 Seconds
