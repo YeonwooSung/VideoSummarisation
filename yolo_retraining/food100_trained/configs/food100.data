@@ -1,0 +1,5 @@
+classes = 100
+train = ./datasets/food100/configs/train.txt  
+valid = ./datasets/food100/configs/test.txt  
+names = ./datasets/food100/configs/food100.names  
+backup = ./datasets/food100/weights
