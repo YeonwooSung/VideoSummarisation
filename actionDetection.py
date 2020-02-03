@@ -65,9 +65,9 @@ inputs = torch.randn(
 
 repo = 'epic-kitchens/action-models'
 
-class_counts = (125, 352)
+class_counts = (125, 352)  # num of verbs = 125, num of nouns = 352
 segment_count = 8
-base_model = 'resnet50'
+base_model = 'resnet50' # 'resnet50' or 'BNInception'
 
 tsn = torch.hub.load(repo, 'TSN', class_counts, segment_count, 'RGB',
                      base_model=base_model,
@@ -93,11 +93,8 @@ for entrypoint in torch.hub.list(repo):
 
 cap = cv2.VideoCapture(videofile)
 
-
-args = arg_parse()
-
-# file path of the video file
-videofile = args.video_file
+args = arg_parse()  # argument parser
+videofile = args.video_file  # file path of the video file
 
 
 # Initialize frame transforms.
@@ -128,9 +125,12 @@ start = time.time()
 
 target_num_of_frames = 160
 
-imgs = []
+imgs = [] # a list to store frames
 
+# change the models to the evaluation mode
 trn.eval()
+tsn.eval()
+tsm.eval()
 
 # load annotation files as data frames
 df_n = pd.read_csv('./epic_annotations/EPIC_noun_classes.csv')
@@ -170,7 +170,11 @@ def printVerbsAndNounsWithProbs(probs_v, idx_v, probs_n, idx_n):
         current_noun = class_key_n[idx_n[i]]
         print('P(Noun) = {:.3f} -> noun = {}'.format(probs_n[i], current_noun))
 
+        # use try catch statement to catch the wordnet errors
         try:
+            # some labels contain ':' (i.e. door:kitchen)
+            # To avoid possible error, the system will check if the noun contains ':'
+            # If so, the noun will be splitted, and use the first element of splitted words as a target noun.
             if ':' in current_noun:
                 temp_n = current_noun.split(':')[0]
                 noun_synset_list.append(wn.synset('{}.n.1'.format(temp_n)))
@@ -183,6 +187,7 @@ def printVerbsAndNounsWithProbs(probs_v, idx_v, probs_n, idx_n):
             print('Error in wordnet!')
 
     similarity_list = []
+    # use for loop to iterate a list of nouns
     for cur_n, cur_synset in zip(noun_list, noun_synset_list):
         total_sim = 0
         
@@ -367,9 +372,10 @@ while cap.isOpened():
     frames += 1
 
 
-if len(imgs) is not 0:
+# check if there is any remaining frames that the action detection system did not check
+if len(imgs) > segment_count:
     processActionDetection()
 
 
-f.close()
-cap.release()
+f.close() # close the file stream
+cap.release() # release the VideoCapture object
