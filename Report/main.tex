@@ -1,6 +1,10 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{float}
+\graphicspath{ {.} }
 
 \title{SH Project Report}
 \author{Yeonwoo Sung}
@@ -17,12 +21,12 @@
 I declare that the material submitted for assessment is my own work except where credit is explicitly given to others by citation or acknowledgement. 
 This work was performed during the current academic year except where otherwise stated.
 
-The main text of this project report is N words long, including project specification and plan.
+The main text of this project report is ????? words long, including project specification and plan.
 
-In submitting this project report to the University of St Andrews, I/we* give permission for it to be made 
-available for use in accordance with the regulations of the University Library. I/we* also give permission for 
+In submitting this project report to the University of St Andrews, I give permission for it to be made 
+available for use in accordance with the regulations of the University Library. I also give permission for 
 the title and abstract to be published and for copies of the report to be made and supplied at cost to any bona fide 
-library or research worker, and to be made available on the World Wide Web. I/we* retain the copyright in this work.
+library or research worker, and to be made available on the World Wide Web. I retain the copyright in this work.
 
 \newpage
 
@@ -37,23 +41,170 @@ library or research worker, and to be made available on the World Wide Web. I/we
 
 \section{Introduction}
 
-According to the \hyperlink{ref1}{Forbes[1]}, more than 500 million hours of video are watched on YouTube every day. Many such statistics show how video content is growing and will remain the mainstream as a means of sharing information. We are already seeing a shift from copy and text to snapshot stories and visual posts (e.g. Instagram) for sharing content. Therefore, it would be possible to say that the personal videos, video lectures, video diaries, video messages on social networks and videos in many other domains are becoming to dominate other forms of information exchange. Consequently, better methods for video management, such as video summarization, are needed.
+According to \hyperlink{ref1}{Forbes [1]}, more than 500 million hours of videos are watched on YouTube every day. Many such statistics show how video content is growing and will remain the mainstream as a means of sharing information. So, it would be possible to say that it is an undeniable fact that the personal videos, video lectures, video diaries, video messages on social networks and videos in many other domains are becoming to dominate other forms of information exchange.
 
-Video summarization is a process of shortening a video by selecting keyframes or parts of videos that captures the main points in the video. This means that by using the video summarization tool, users should be able to reduce the video to a small number of still images called keyframes, where the keyframes should contain all key points of the video. Summarization has many use cases, with one of the most significant being the ability to gauge interest in content. For example, the users might want to summarize the online tutorial video, since they think the tutorial video contains too much information than they actually needed. Or, some users might want to summarize the video that they filmed, so that they could upload the summarized version on the social media and share it with other users.
+In recent days, we have seen significant progress in many domains such as \hyperlink{ref9}{image classification [9]}, \hyperlink{ref11}{captioning [11]} and \hyperlink{ref10}{visual question answering [10]}. Moreover, we are already seeing a shift from copy and text to snapshot stories and visual posts (e.g. Instagram) for sharing content. Thus, it would be possible to say that the personal videos, video lectures, video diaries, video messages on social networks and videos in many other domains are becoming to dominate other forms of information exchange. Consequently, better methods for video management, such as video summarization, will be needed. 
 
-Apparently, the AI could play a key role with the video summarization, since the AI is playing large role in many other video editing tools, such as video classification tools that clasify the contents of the video for editing purposes. The main aim of this project is to implement a program that uses the neural networks to understand the semantic of the video, so that it could summarize the video properly. The key idea of this project is to use the object detection and action detection algorithms to understand the semantic of video.
+Video summarization is a process of shortening a video by selecting keyframes or parts of videos that captures the main points in the video. This means that by using the video summarization tool, users should be able to reduce the video to a small number of still images called keyframes, where the keyframes should contain all key points of the video. The paper \hyperlink{ref6}{"Rethinking the Evaluation of Video Summaries" [6]} defined the term ”Video Summarization” as ”a technique to create a short skim of the original video while preserving the main contents”. So, watching the output of the video summarization should be similar to the skimming the long texts or paper.
 
-Recently, there have been many advances in using deep learning to increase the processing of images; the ability for AI to understand an image’s context has rapidly improved in accuracy. Similar techniques can be used to understand videos too, but this is a much more complex process. Video is not just a collection of a large number of frames or images, but videos are multi-dimensional - including audio, motion, and a time-series dimension. Each of these dimensions are key in understanding a video, and depending on what the summarization is targeting, different dimensions can be crucial. However, if the target videos are cooking videos, then the neural network might understand the semantic of the video by detecting the motions and objects in the videos, rather than comparing the frames or analysing the audio data.
+Summarization has many use cases, with one of the most significant being the ability to gauge interest in the content. For example, the users might want to summarize the online tutorial video, since they think the tutorial video contains too much information than they needed. Or, some users might want to summarize the video that they filmed, so that they could upload the summarized version on social media and share it with other users.
 
-\section{Related Work}
+The AI could play a key role with video summarization, since the AI is playing a large role in many other video editing tools, such as video classification tools that classify the contents of the video for editing purposes. The main aim of this project is to implement a program that uses the neural networks to understand the semantic of the video so that it could summarize the video properly. The key idea of this project is to use object detection and action detection algorithms to understand the semantic of the video.
 
-YOLO, which stands for You Only Look Once, is a real-time object detection system. To detect the objects in each frame of the video, the YOLOv3 is used. According to the \hypertarget{ref2}{YOLOv3 paper}, the YOLOv3 guarantees to detect objects within short time. With the COCO dataset, the YOLOv3 could handle 45 frames per second with 51\% of accuracy, where the RetinaNet could only handle 15 frames per second with 50\% of accuracy. Henceforth, it is possible to say that the YOLOv3 is extremely fast and accurate.
 
-\section{Methodology}
+\subsection{Motivation}
 
-\section{Design}
+When you watch the online tutorial videos, you might think that the tutorial video contains some unnecessary information, or you might think that the video is too long, which makes you skip it. Perhaps, you just want to get the most essential information in the video and skip all other unnecessary parts. In my case, sometimes I gave up to watch the tutorial video if the video is too long. Especially, if the topic of the video is not the ones that I am interested in, then I usually stop trying to watch the video. I always thought it would be cool if they provide the summarized version of the long video so that I could learn something much quicker. However, it is not true that the short video is always better. Compare with the original video, the summarized version will contain much less information, which will be not enough for some people to understand new knowledge. However, by watching the summarized video, users would be able to know if the contents of the video are related to the ones that they were looking for much easily and quickly.
 
-\section{Implementation}
+Due to this reason, I wanted to try implementing the program which performs the video summarization. By using the video summarization, it would be possible to provide only the essential parts of the data by extracting the highlight parts of the video. Especially, if you are running out of time for some reason, it might be worth to watch a summarized version of the video to get the essential knowledge.
+
+\section{Related Works}
+
+\subsection{Object detection for video summarization}
+
+\hyperlink{ref18}{O. Utsumi et al. [18]} proposed an object detection and tracking method for the video summarization system for a soccer game, which could describe the content of the soccer game by tracking the objects in the frames. In the paper, \hyperlink{ref18}{O. Utsumi et al. [18]} stated that they considered the characteristics of soccer video images, that most non-object regions are roughly single-colored, which is green, and most objects tend to have locally strong edges. Utsumi also mentioned that "the result of an evaluation experiment applied to actual soccer video showed very high detection rate in detecting player regions without occlusion and the promising ability for regions with occlusion”.
+
+Similarly, \hyperlink{ref19}{X. Yu et al. [19]} proposed a ball tracking framework for broadcast soccer video. This framework processes each frame in the video to remove all unnecessary objects and non-objects so that it could concentrate on the most essential objects, which are a ball and players. After removing all unnecessary objects from each frame, it checks the size of the remaining objects to distinguish a ball and people. After that, the framework compares each processed frame to track all players and the ball to summarize the content of the soccer video.
+
+As you could see above, many researchers tried to make the system to understand the video by using object detection and object tracking methods. And to achieve this, as the previous papers did so, choosing a suitable video category as a target is important.
+
+As you know, a video contains not only the sequence of images but also audio data. If you want to make the program to understand the video that the audio data contain the most essential information, then the object tracking method would not work for those videos. Also, some video has subtitles, which might contain important information. In this case, the object detection method would not be helpful to understand the contents. However, if the domain of the video is soccer, then the object tracking method could be helpful to understand the video since it is safe to assume that all essential information of the soccer game is included in the frames. Henceforth, it is possible to say that the category of the video is important to use the object detection system.
+
+\subsection{Motion detection to understand video}
+
+Some researchers tried to implement the video summarization system with the motion tracking method. In 2013, P. Jodoin et al. published a paper called \hyperlink{ref20}{Meta-tracking for video scene understanding [20]}, which presents a method called meta-tracking method. It is used for extracting dominant motion patterns and the main entry and exit areas from a surveillance video. The meta-tracking method first computes the motion histograms for each pixel and performs the motion tracking by using those generated histogram values. According to P. Jodoin et al., the meta-tracking procedure is a unique way to connect low-level motion features to long-range motion patterns. This paper stated that by using this method, the program could extract features about motion patterns, which could be used for understanding the semantic of the video.
+
+Most papers for sports video summarization are suggesting their own motion tracking (or action detecting) algorithm. Clearly, this is because that the action is the most important thing in the sports video. By detecting, compressing, and summarizing the motions in the video, the system could understand and summarize the sports video. Therefore, it is possible to say that by choosing the suitable category, the system would be able to understand the semantics of the video. Once the system could understand the semantics of the video, then the system would be able to summarize the video.
+
+\subsection{Using procedural steps for summarization}
+
+TODO YouCook2 - training neural net with recipes and action labels with segments
+
+\section{Design and Implementation}
+
+Recently, there have been many advances in using deep learning to increase the processing of images; the ability for AI to understand an image’s context has rapidly improved in accuracy. Similar techniques can be used to understand video too, but this is a much more complex process. Video is not just a collection of a large number of frames or images, but videos are multi-dimensional - including audio, motion, and a time-series dimension. Each of these dimensions are key in understanding a video, and depending on what the summarization is targeting, different dimensions can be crucial.
+
+Furthermore, the difficulty in video summarization lies in the definition of “important” video segments to be included in a summary and their extraction. According to the Otani \hyperlink{ref3}{[3]}, at the early stage of video summarization research, most approaches focus on a certain genre of video. For example, the importance of a video segment in broadcasting sports programs may be easily defined based on the event happening in that segment according to the rules of the sports.
+
+However, what if the video summarization system only looks for the cooking video? Then, the summarization system might be able to understand the semantics of the video by simply detecting the motions and objects in the video, rather than comparing the frames or analyzing the audio data. Basically, the key components in the cooking videos are foods, utensils, and human actions. This means that it would be possible to understand the cooking video by detecting the foods, utensils, and actions. In other words, if the foods or utensils in the frames are changed, or if the person in the video did some different action, then the video summarization system should consider it as a change point, and choose that frame as a keyframe.
+
+For example, if there was an apple on the table in the previous frame, however, now there is an orange on the table, then the video summarization system should detect that change, and mark the current frame as an important frame. Similarly, if the person in the cooking video was chopping the onion, however, now that person is pouring the sauce into the bowl, then the system should mark the current frame as a change point, and consider it as an important frame. Base on this thought, this project is designed for summarizing the cooking videos, which will detect the objects and actions in the video to understand the semantic of the video.
+
+\subsection{Mid-Project Changes}
+
+At the beginning, I was planning to use frame comparison and object detection to extract features from frames to find the key frames, and do the reconstruction with the found key frames. And after reading some articles, I found that the frame comparison is not as easy as I expected. After having some more literature reviews, I found that there is a technique called "action detection", which uses the pre-trained model to detect the action from the frames. Thus, I decided to use the action detection rather than implementing my own feature extractor by using the frame comparison.
+
+TODO need to recheck...????
+
+\subsection{Planned Flow}
+
+TODO - ???????
+
+\subsection{Object Detection}
+
+Object Detection is a computer technology related to computer vision and image processing that deals with detecting instances of semantic objects of a certain class in digital images and videos. Object Detection has applications in many areas of computer vision, including image retrieval and video surveillance. Also, Object Detection has been used for many machine learning and deep learning projects, such as face recognition or object tracking.
+
+The \hyperlink{ref14}{object tracking system [14]} is a component that keeps track on the object by watching the stream of images. As you know the video is a stream of frames and audio data. Therefore, it would be possible to say that the system could find the keyframes from the video by using the system that works similarly with the object tracking system by detecting the objects from the frames of the video. Hence, one of the main components of this project would be the object detection system, which detects the objects' names and coordinates from each frame, which will be used for finding the keyframes.
+
+\subsubsection{Object Detection - YOLOv3}
+
+"YOLO", which stands for You Only Look Once, is a real-time object detection system that is one of the most widely used object detection models. In this project, the YOLOv3 model is used to detect the objects in each frame of the video. According to the \hyperlink{ref2}{J. Redmon et al. [2]}, the YOLOv3 guarantees to detect objects within short time. With the COCO dataset, the YOLOv3 could handle 45 frames per second with 51\% of accuracy, where the RetinaNet only could handle 15 frames per second with 50\% of accuracy. Henceforth, it would be possible to say that the YOLOv3 is extremely fast and accurate.
+
+In general, most detection systems repurpose classifiers or localizers to perform detection. Those detection systems apply the model to an image at multiple locations and scales, and consider the high scoring regions of the image as detections. However, the YOLO model uses a different approach. In the paper, \hyperlink{ref2}{J. Redmon et al. [2]} mentioned that YOLO applies a single neural network to the full image. This network divides the image into regions and predicts bounding boxes and probabilities for each region. These bounding boxes are weighted by the predicted probabilities. By doing this, the YOLO model has several advantages over classifier-based systems. Firstly, the predictions are informed by the global context in the image, since YOLO looks at the whole image at test time. Moreover, the YOLO makes predictions with a single network evaluation unlike the R-CNN model, which requires thousands of networks for a single image.
+
+Basically, the YOLOv3 makes the predictions to find the bounding boxes. For each bounding box, the YOLOv3 model uses the multi-label classification to predict the class that the given bounding box may contain. While making the prediction, the YOLOv3 model uses the feature extractor, which has several convolutional layers, to extract the features from each bounding box. By using the extracted features, it predicts to find the class that is most suitable to the given bounding box, and return the name of the detected object and the coordinates of the bounding box. By using this algorithm, the YOLOv3 could detect objects in the image within a short time with fairly good accuracy.
+
+While searching resources for the YOLOv3, I found the \hyperlink{ref15}{public github repository [15]} that contains the source codes of the PyTorch Implementation of the YOLOv3 DarkNet and the pre-trained model, which is trained with the COCO dataset. So, I used that repository as a starting point of my project.
+
+\subsubsection{Retraining the YOLOv3}
+
+Since the YOLOv3 model with the COCO dataset could only detect 80 different kinds of objects, the accuracy of the YOLOv3 model was much lower than expected. For example, the YOLOv3 gives the "toilet" label to the white doughnut. This is because the YOLOv3 is too generic and needs to be retrained with specific image datasets with foods. Thus, I had to retrain the YOLO model.
+
+It is clear that the usual difficulty with the Deep Learning is the requirement of a large dataset. Instead of investing great labor to collect the required food images, I decided to retrain the YOLO with the \hyperlink{ref4}{Food100 dataset [4]}. This dataset contains 100 classes of food photos, where there are more than 100 images for each class. Each food photo has a bounding box indicating the location of the food item in the photo. Also, the dataset contains the label files for all classes, which contains the coordinates of the bounding boxes and the names of the object in each bounding box. Henceforth, it would be possible to say that the Food-100 is a perfect dataset to retrain the YOLO model to detect foods in the video.
+
+To retrain the YOLO model, the DarkNet is required. You could download and install the DarkNet by following the instructions in the \hyperlink{ref5}{DarkNet website [5]}. After installing the DarkNet, we need to start preparing the YOLO training process. To get Darknet YOLO training to work, several things are required - 1) Object bounding box file for each image, 2) Class name file for all the category names, 3) Training dataset file for the list of training images, 4) Validating dataset file for the list of validating images, 5) Configuration file for YOLO neural network specification, and 6) Data location file for finding all the data information. Since the Food100 dataset provides the bounding box file and the class name files, all we need to do for the YOLO training are task 3), 4), 5) and 6).
+
+For the task 3) and 4), DarkNet requires the text files called "train.txt" and "test.txt", where "train.txt" file contains the list of file paths of the files that will be used for the training, and "test.txt" file contains the list of file paths that will be used for the testing. To generate these text files, I wrote a simple python script, which reads the label files that the Food100 dataset provides, and splits all Food100 class images into "train.txt" training image list and "test.txt" validating image list. When splitting the data into train and test set, the ratio of train set and test set is 8 : 2, which means that using 80\% of dataset as training dataset and using 20\% of dataset for testing.
+
+The configuration file contains the specification of the YOLOv3 neural network. Since the target dataset has been changed, the content of the configuration file also need to be changed. To use the retrained YOLO model, the new configuration file should be created. The contents of the new configuration file should be almost same with the contents of the original configuration file, as both of them are using the YOLOv3 model. However, the number of filters of some layers and the number of classes should be modified, since the number of classes of the Food-100 dataset is different with the coco dataset. According to the \hyperlink{ref2}{YOLOv3 paper[2]}, the number of filters is equal n is $$n = (a + b + 1) * 3$$, where a is the number of classes and b is the number of the coordinates. Since the value of the n in the default configuration file is 245 (245 = (80 + 4 + 1) * 3 = 85 * 3  (a = 80, b = 4)), the value of the n in the new configuration file should be 315 ((100 + 4 + 1) * 3 = 105 * 3 = 315). Thus, by editing the number of classes and filters from "classes=80" and "filters=245" to "classes=100" and "filters=315", it is possible to generate a new configuration file for the custom YOLOv3 model.
+
+Basically, the DarkNet does not know where the label files, text files ("train.txt" and "text.txt"), and class name file are located in. Thus, the data file, which tells the DarkNet the file paths of those files, should be created before running the DarkNet to retrain the YOLOv3 model with the custom data. All the things that should be done in this step are finding the image files, creating label file for each class, and splitting the set of images into train set and test set.
+
+When training the neural network, programmers should worry about both under-fitting and over-fitting, since both could bring serious problems. To avoid the both, the DarkNet recommends to retrain the YOLO model by iterating 2,000 epochs for each class. Since the number of classes in the new dataset is 100, ideally, the retraining process should iterate 200,000 iterations.
+
+When retraining the YOLOv3 model, the programmer could choose either YOLOv3 or YOLOv3-tiny to use. As the name depicts, the tiny model is a tiny YOLO model, which is much smaller than the general YOLO model. With the YOLO-tiny model, the retraining process could be finished sooner, however, the accuracy of the YOLO-tiny model is not as good as the general YOLO model. According to the \hyperlink{ref7}{DarkNet website [7]}, for the COCO dataset with the same number of iteration, the accuracy of the YOLOv3-tiny model is 31\%, where the accuracy of the YOLOv3 model is 51\%. As commonly known, the accuracy of the YOLO object detection system itself is not too high. Therefore, it is safe to assume that the accuracy of the tiny YOLOv3 model is not as good as expected. To understand the semantic of the video correctly, the accuracy of the object detection system should be not too bad. Henceforth, it is possible to say that the YOLOv3 model is more suitable for this project than the YOLOv3-tiny model.
+
+By executing the command "./darknet detector train (\textit{data file path}) (\textit{config file path}) (\textit{weights file path})", the DarkNet program will execute the retraining process for the YOLOv3 model. For every 100 epochs, the DarkNet automatically stores the backup weight files in the backup directory, thus, even if the program terminates in the middle of the retraining process, it is able to restart the retraining process from the certain point.
+
+Once the retraining process terminates, rename the latest backup weights file with the suitable name (i.e. food100.weights). By using the generated weights file and the corresponding name file and configuration file, now the object detection system could detect the food objects from the images.
+
+The retrained model could detect food objects much better than the YOLOv3 model with COCO dataset. However, it turns out that the accuracy of the Food-100 YOLO model is not good for detecting the normal objects such as kitchen utensils. This is basically because that the dataset that is used for the retraining process only contains the food images. For instance, the retrained model gives the label "hamburger" to the fist. To overcome this issue, I designed the system to use both general YOLO model and retrained model, and merging the outputs of 2 models to enhance the accuracy of the object detection.
+
+\subsubsection{Merging the sets of detected objects}
+
+As mentioned above, the object detection system uses 2 YOLO models - one with the COCO dataset, and the other with the Food100 dataset. So, the YOLO COCO model will return the list of general objects that are included in the COCO dataset, where the YOLO Food100 model will return the list of food objects that are included in the Food100 dataset.
+
+The main reason that I did not retrained the model with both Food100 and COCO dataset is because the number of images for each class in COCO dataset and Food100 dataset are different. Basically, the Food100 dataset only has about 150 images for each class, however, the COCO dataset contains more than 500 images for each class. Due to this difference, the retrained model that is retrained with both COCO dataset and Food100 dataset was not able to make a correct prediction for the food object. Furthermore, since the size of the COCO dataset is too big, the retraining process took too much time. Apparently, one of the most attractive points of the YOLO is it's short retraining time. Thus, it might be possible to say that there is no merit if the retraining process takes too much computational resources. Henceforth, I decided to retrain the YOLO model with just Food100 dataset, and make new functions that merges the outputs of original YOLO model and food YOLO model.
+
+When the system detects the object, the system stores the 2 coordinates and label name of each bounding box. Then, by using those coordinates, it calculates the middle point of the bounding box and the euclidean distance between 2 coordinates, which is identical to the length of the diagonal of the bounding box. 
+
+\[the\_length\_of\_diagonal = \sqrt{((x2 - x1)^{2} + (y2 - y1)^{2})}\]
+
+And when the system merges the output lists, it first compare all middle points and length of the diagonals of all detected objects to check if there are any duplication. If not, the system will just merge the output lists. However, if the system founds the duplication, then the system will first compare the label name of 2 objects. If the label names are same, then it would be easy to merge the outputs. On the other hand, if the label names are not same, then the system should determine which object to use.
+
+To overcome the issue mentioned above, the object detection system checks the confidence value that each YOLO model returns. Basically, the YOLO gives a float type constant as a confidence value between 0 and 1. This value depicts how much the YOLO is confident with the prediction that it made. For example, if the YOLO gives 0.3 as a confidence value, then that means that the YOLO is 30\% sure with the prediction that it made. Similarly, if the confidence value is 0.8, then that means that the YOLO is 80\% sure with the prediction that it made. However, it is clear that the confidence value is not an accuracy. This means that even if the YOLO is confident with the prediction that it made, that does not mean that the prediction is accurate. So, when merging the output lists, the system should check multiple conditions.
+
+If confidence value of both general object and food object are higher than the 0.5, then the system will choose the general object. And if the confidence value of the general object is higher than 0.5, however, the food object's confidence value is less than 0.5, the system will choose the general object. Similarly, if the confidence value of the food object is higher than 0.5, however, the general object's confidence value is less than 0.5, then the system will choose the food object. If the confidence of both COCO object and food object are less than 0.5, then the system will ignore them.
+
+\subsubsection{Using wordnet to enhance the accuracy}
+
+TODO - wordnet, etc ??????
+
+\subsubsection{Skipping frames}
+
+TODO - skip frames (read every n frames)
+
+\subsection{Action Detection}
+
+It is clear that the object detection is not enough for implementing the video summarization system, because it is almost impossible to understand the semantic of the video. Since the video is a stream of frames, the video summarization program should be able to understand the relationship between each frame to find the key frames. To make the system to understand the video, I decided to add the action detection system as a sub-system. By detecting the action, it would be possible to understand the semantic of the current frame, which is definitely helpful for the video summarization system to choose the key frames.
+
+Again, to detect the action, a video dataset was required, whose size is huge enough. Also, the domain of the videos should be related to the cooking, otherwise, it would be hard to detect actions from the cooking videos. After spending several days to find the dataset to use, I was able to find the open sourced dataset with the pre-trained model, which is called \hyperlink{ref8}{"Epic Kitchens" [8]}.
+
+\subsubsection{Epic Kitchens}
+
+The \hyperlink{ref8}{"Epic Kitchens" [8]} is an open sourced dataset, which contains the videos with first-person vision. The videos in this dataset depict non-scripted daily activities. Basically, This dataset is  a large-scale egocentric video benchmark recorded by 32 participants in their native kitchen environments. All participants are asked to start recording every time they entered their kitchen until they finished using their kitchen. Also, for the annotation, they asked their participants to narrate their own videos, so that they could reflect true intention. According to their \hyperlink{ref12}{paper [12]}, they describe their object, action and anticipation challenges, and evaluate several baselines over two test splits, seen and unseen kitchens. Also, the \hyperlink{ref8}{"Epic Kitchens" [8]} provides the pre-trained models by using the PyTorch Hub, which will be mentioned in the \hyperlink{actionDetection_used}{"Technologies Used"} section.
+
+The Epic Kitchens provides a set of pre-trained models where each of those models uses different action detection algorithm. The provided models are \hyperlink{ref16}{TSN (Temporal Segment Networks) [16]}, \hyperlink{ref13}{TRN (Temporal Relational Reasoning) [13]}, and \hyperlink{ref17}{TSM (Temporal Shift Module) [17]}.
+
+TODO - explain what each TRN, TSM and TSM are ????
+
+By passing multiple frames, the pretrained models will detect the action in those frames, and convert the array of frames to the features. When extracting the features, the pretrained models will return 2 types of features - one for the verbs and one for the nouns. The the each extracted feature could be converted to the corresponding logits. By using the Softmax function as an activation function, the action detection system will calculate the mean of the given logits. The result of the calculation will be a list that contains the indexes and probabilities of labels. Since the action detecting models returned 2 logits, 1 for verbs and the other for nouns, the system could calculate lists of indexes and probability values for nouns and verbs.
+
+\subsubsection{Top K nouns and verbs}
+
+Each of 3 action detection models will return 2 lists, thus, now the system has total 6 lists - 3 lists for verbs and 3 lists for nouns. Epic-Kitchens trained models with 126 verbs and 351 nouns. However, the video summarization system only needs 1 verb and Top K nouns. Thus, the system should be able to choose the best verb and Top K nouns.
+
+TODO - choosing Top K nouns and verbs
+
+\subsubsection{Merging outputs from each action detection models}
+
+TODO - using wordnet to make the system accurate + merging all chosen nouns and verbs
+
+\subsection{Merging the sub-systems}
+
+\subsubsection{Merging sub-systems}
+
+TODO - wordnet, etc (maybe using pipeline for merging the subsystems?)
+
+\section{Results and Discussion}
+
+\subsection{Evaluation}
+
+\subsection{Comparison with DOER}
+
+\subsection{Future Work and Improvements}
+
+\section{Conclusion}
 
 \newpage
 
@@ -61,5 +212,55 @@ YOLO, which stands for You Only Look Once, is a real-time object detection syste
 \hypertarget{ref1}{[1]} Forbes, "Video Marketing In 2018 Continues To Explode As Way To Reach Customers" [online]. Available :  \href{https://www.forbes.com/sites/tjmccue/2018/06/22/video-marketing-2018-trends-continues-to-explode-as-the-way-to-reach-customers}{https://www.forbes.com/sites/tjmccue/2018/06/22/video-marketing-2018-trends-continues-to-explode-as-the-way-to-reach-customers}
 \newline
 \hypertarget{ref2}{[2]} J. Redmon, A. Farhadi, "YOLOv3 : An Incremental Improvement", 2015. [online]. Available :  \url{https://pjreddie.com/media/files/papers/YOLOv3.pdf}
+\newline
+\hypertarget{ref3}{[3]} M. Otani, Y. Nakashima, E. Rahtu, J. Heikkila, N. Yokoya, "Video Summarization using Deep Semantic Features", 2016. [online]. Available : \url{https://arxiv.org/abs/1609.08758}
+\newline
+\hypertarget{ref4}{[4]} Y. Matsuda, H. Hoashi, K. Yanai, "UEC FOOD 100": 100-kind food dataset", 2012. [online]. Available : \url{http://foodcam.mobi/dataset100.html}
+\newline
+\hypertarget{ref5}{[5]} J. Redmon, A. Farhadi, "How to download and install the DarkNet", 2015. [online]. Available :  \url{https://pjreddie.com/darknet/install/}
+\newline
+\hypertarget{ref6}{[6]} M. Otani, Y. Nakashima, E. Rahtu, J. Heikkila, "Rethinking the Evaluation of Video Summaries", 2019. [online]. Available :  \url{https://arxiv.org/abs/1903.11328}
+\newline
+\hypertarget{ref7}{[7]}  J. Redmon, A. Farhadi, "DarkNet YOLO", 2015. [online]. Available :  \url{https://pjreddie.com/darknet/yolo/}
+\newline
+\hypertarget{ref8}{[8]}  D. Damen, S. Fidler, G. M. Farinella, D. Moltisanti, M. Wray, H. Doughty, T. Perrett, W. Price, E. Kazakos, J. Munro, A. Furnari, "Epic Kitchens", 2019. [online]. Available :  \url{https://epic-kitchens.github.io/2019}
+\newline
+\hypertarget{ref9}{[9]}  K. He, X. Zhang, S. Ren, J. Sun, "Deep residual learning for image recognition", 2016. [online] Available : \url{http://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html}
+\newline
+\hypertarget{ref10}{[10]}  S. Antol, A. Agrawal, J. Lu, M. Mitchell, D. Batra, C. L. Zitnick, D. Parikh, "VQA: Visual Question Answering", 2015. [online] Available : \url{http://openaccess.thecvf.com/content_iccv_2015/html/Antol_VQA_Visual_Question_ICCV_2015_paper.html}
+\newline
+\hypertarget{ref11}{[11]}  A. Karpathy, L. Fei-Fei, "Deep Visual-Semantic Alignments for Generating Image Descriptions", 2015. [online] Available : \url{https://www.cv-foundation.org/openaccess/content_cvpr_2015/html/Karpathy_Deep_Visual-Semantic_Alignments_2015_CVPR_paper.html}
+\newline
+\hypertarget{ref12}{[12]}  D. Damen, S. Fidler, G. M. Farinella, D. Moltisanti, M. Wray, H. Doughty, T. Perrett, W. Price, E. Kazakos, J. Munro, A. Furnari, "Scaling Egocentric Vision: The EPIC-KITCHENS Dataset", 2018. [online]. Available :  \url{https://arxiv.org/abs/1804.02748}
+\newline
+\hypertarget{ref13}{[13]} B. Zhou, A. ANdonian, A. Oliva, A. Torralba, "Temporal Relational Reasoning in Videos", 2017. [online]. Available :  \url{http://relation.csail.mit.edu/}
+\newline
+\hypertarget{ref14}{[14]} Y. Wu, J. Lim, M. H. Yang, "Online Object Tracking", 2013. [online]. Available :  \url{https://www.cv-foundation.org/openaccess/content_cvpr_2013/html/Wu_Online_Object_Tracking_2013_CVPR_paper.html}
+\newline
+\hypertarget{ref15}{[15]} A. Kathuria, "YOLO\_v3\_tutorial\_from\_scratch", [online]. Available :  \url{https://github.com/ayooshkathuria/YOLO_v3_tutorial_from_scratch}
+\newline
+\hypertarget{ref16}{[16]} L. Wang, Y. Xiong, Z. Wang, Y. Qiao, D. Lin, X. Tang, L. V. Gool, "Temporal Segment Networks for Action Recognition in Videos", [online]. Available :  \url{https://arxiv.org/abs/1705.02953}
+\newline
+\hypertarget{ref17}{[17]} J. Lin, C. Gan, S. Han, "TSM: Temporal Shift Module for Efficient Video Understanding", [online]. Available :  \url{https://arxiv.org/abs/1811.08383}
+\hypertarget{ref18}{[18]} O. Utsumi, K. Miura, I. Ide, S. Sakai, H. Tanaka, "An object detection method for describing soccer games from video", [online]. Available :  \url{https://ieeexplore.ieee.org/abstract/document/1035714}
+\hypertarget{ref19}{[19]} X. Yu, C. Xu, Q. Tian, H. w. Leong, "A ball tracking framework for broadcast soccer video", 2003. [online]. Available :  \url{https://www.researchgate.net/publication/4028111_A_ball_tracking_framework_for_broadcast_soccer_video}
+\hypertarget{ref20}{[20]} P. Jodoin, Y. Benezeth, Y. Wang, "Meta-tracking for video scene understanding", 2013. [online]. Available :  \url{https://ieeexplore.ieee.org/abstract/document/6636607}
+\newline
+
+\newpage
+
+\section{Appendix}
+
+\subsection{Instructions}
+
+\subsection{Technologies Used}
+
+\subsubsection{YOLOv3}
+
+TODO - pytorch, opencv, etc
+
+\subsubsection{Action Detection Model}
+
+\hypertarget{actionDetection_used}{The PyTorch Hub} is a simple API and workflow the provides the basic building blocks for improving machine learning research reproducibility. The PyTorch Hub consists of a pre-trained model repository designed specifically to facilitate research reproducibility.  Therefore, by using the PyTorch Hub, researchers in various fields could easily discover each other’s research, leverage it as a baseline and build new cutting edge research from there. By using the PyTorch Hub, the system will download the pretrained action detection models.
 
 \end{document}
