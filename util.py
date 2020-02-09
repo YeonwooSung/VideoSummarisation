@@ -269,6 +269,16 @@ def write_results(prediction, confidence, num_classes, nms=True, nms_conf=0.4):
     return output
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
 
 
 def predict_transform_half(prediction, inp_dim, anchors, num_classes, CUDA=True):
