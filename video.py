@@ -9,7 +9,7 @@ from util import *
 import argparse
 import os
 from darknet import Darknet
-from detectedObject import DetectedObject, compareObjectLists
+from detectedObject import DetectedObject, compareObjectLists, mergeDetectedObjectLists
 import pickle as pkl
 import pandas as pd
 import random
@@ -33,8 +33,10 @@ def arg_parse():
     parser.add_argument("--reso", dest = 'reso', help = 
                         "Input resolution of the network. Increase to increase accuracy. Decrease to increase speed",
                         default = "416", type = str)
-    parser.add_argument("--video", dest = "videofile", help = "Video file to     run detection on", default = "video.avi", type = str)
-    
+    parser.add_argument("--video", dest = "videofile", help = "Video file to run detection on", default = "video.avi", type = str)
+    parser.add_argument('--logPath', dest="logPath", help="The file path of the text file that the object detection system logs the logging data", default='./testOutput.txt', type=str)
+    parser.add_argument('--action', dest='actionFile', help="The file path of the text file that contains the output of the acion detection subsystem", default='./actionDetection_output.txt', type=str)
+
     return parser.parse_args()
 
 
@@ -44,9 +46,13 @@ batch_size = int(args.bs)
 confidence = float(args.confidence)
 nms_thesh = float(args.nms_thresh)
 
+output_path = args.logPath
+actionDetection_output_filepath = args.actionFile
+
+
 # constants
 numOfFrames_output = 10
-numOfTurns = 5
+numOfTurns = 50 #TODO 5? 10? 50? 100?
 
 # global variables to check the cost time
 start = 0
@@ -72,8 +78,8 @@ print("Loading network.....")
 model = Darknet(args.cfgfile)
 model.load_weights(args.weightsfile)
 
-model_foodDomain = Darknet('cfg/yolov3-food100.cfg') #TODO
-model_foodDomain.load_weights('./yolov3-food100.weights') #TODO
+model_foodDomain = Darknet('cfg/yolov3-food100.cfg')
+model_foodDomain.load_weights('./yolov3-food100.weights')
 
 print("Network successfully loaded")
 
@@ -95,7 +101,7 @@ model.eval()
 model_foodDomain.eval()
 
 
-def parseResult(x, results, target_classes):
+def parseResult(x, results, target_classes, detected_object_list):
     """
     Parse the results to get the detected object.
 
@@ -113,22 +119,22 @@ def parseResult(x, results, target_classes):
 
     cls = int(x[-1])
 
-    print('cls = ' + str(cls))
+    print('[DEBUG] cls = ' + str(cls))
 
     # to avoid the IndexError
     if cls >= len(target_classes) or cls < 0:
         return img
 
     label = "{0}".format(target_classes[cls]) # get the label name
-    
+
     obj = DetectedObject()
     obj.setLabel(label)
     obj.setVertices(vertex1, vertex2)
 
     f.write('\t{0}\r\n'.format(obj.getInfoString()))
-    
+
     # push the detected object to the list
-    objectList.append(obj)
+    detected_object_list.append(obj)
 
     return img
 
@@ -146,14 +152,18 @@ assert cap.isOpened(), 'Cannot capture source'
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 
-vWriter = cv2.VideoWriter('outpy.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), numOfFrames_output, (frame_width, frame_height))
+vWriter = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), numOfFrames_output, (frame_width, frame_height))
 
 frames = 0
 start = time.time()
 
-# open the file stream instance to write a file
-f = open('testOutput.txt', 'w+')
 
+# open the file stream instance to write a file
+f = open(output_path, 'w+')
+
+actionDetection_output = []
+with open(actionDetection_output_filepath) as f_action:
+    actionDetection_output = f_action.read().splitlines()
 
 
 # use while loop to iterate the frames of the target video
@@ -162,8 +172,10 @@ while cap.isOpened():
 
     # use if-else statement to check if there is remaining frame.
     if ret:
-        img, orig_im, dim = prep_image(frame, inp_dim)
 
+        #TODO process object detection only when (frames % num of turns == 0)
+
+        img, orig_im, dim = prep_image(frame, inp_dim)
         im_dim = torch.FloatTensor(dim).repeat(1, 2)
 
         if CUDA:
@@ -173,7 +185,6 @@ while cap.isOpened():
 
         with torch.no_grad():
             output_general = model(Variable(img), CUDA)
-
         with torch.no_grad():
             output_food = model_foodDomain(Variable(img), CUDA)
 
@@ -223,8 +234,7 @@ while cap.isOpened():
             output_general[i, [2,4]] = torch.clamp(output_general[i, [2,4]], 0.0, im_dim_general[i,1])
         
         for i in range(output_food.shape[0]):
-            output_food[i, [1, 3]] = torch.clamp(
-                output_food[i, [1, 3]], 0.0, im_dim_food[i, 0])
+            output_food[i, [1, 3]] = torch.clamp(output_food[i, [1, 3]], 0.0, im_dim_food[i, 0])
             output_food[i, [2,4]] = torch.clamp(output_food[i, [2,4]], 0.0, im_dim_food[i,1])
 
 
@@ -236,10 +246,15 @@ while cap.isOpened():
         # write text to the file
         f.write('\ncurrent frame: %d\n' % frames)
 
-        # use the lambda to draw rectangles on the frames
-        list(map(lambda x: parseResult(x, orig_im, classes), output_general))
-        list(map(lambda x: parseResult(x, orig_im, classes_food), output_food))
+        detected_general = []
+        detected_food = []
 
+        # use the lambda to draw rectangles on the frames
+        list(map(lambda x: parseResult(x, orig_im, classes), output_general, detected_general))
+        list(map(lambda x: parseResult(x, orig_im, classes_food), output_food, detected_food))
+
+        # merge detected_general and detected_food
+        objectList = mergeDetectedObjectLists(detected_general, detected_food)
 
         #TODO cv2.imshow("frame", frame)  # show the modified frame to the user
 
@@ -261,11 +276,15 @@ while cap.isOpened():
 
 
         if (frames < numOfTurns):
-            vWriter.write(orig_im)
+            vWriter.write(orig_im) #TODO is this requried??
         elif (frames % numOfTurns == 0):
             # iterate the object lists, and check if the object
             if (not compareObjectLists(objectList, lastSelectedList)):
                 vWriter.write(orig_im)  # write the frame
+                #TODO get multiple frames from this point, and add those frames to the output video
+            
+            lastSelectedList = objectList
+            previousList = []
 
 
         frames += 1  # increase the number of frames that are processed
