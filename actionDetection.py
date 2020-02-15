@@ -25,9 +25,9 @@ def arg_parse():
     """
 
     parser = argparse.ArgumentParser(description='EPIC Kitchen dataset testing')
+    parser.add_argument('--video_file', type=str, default='./video.avi')
 
-    #TODO
-    parser.add_argument('--video_file', type=str, default='../Gordon_Ramsay_perfect_burger_tutorial.mp4')
+    parser.add_argument('--debug', type=str2bool, nargs='?', const=True, default=False, help="Activate debug mode.")
 
     parser.add_argument('--frame_folder', type=str, default='')
     parser.add_argument('--modality', type=str, default='RGB',
@@ -41,13 +41,6 @@ def arg_parse():
     parser.add_argument('--img_feature_dim', type=int, default=256)
     parser.add_argument('--consensus_type', type=str, default='TRNmultiscale')
     parser.add_argument('--weights', type=str, default='pretrain/TRN_jester_RGB_BNInception_TRNmultiscale_segment8_best.pth.tar')
-
-    parser.add_argument("--cfg", dest='cfgfile', help="Config file",
-                        default="cfg/yolov3.cfg", type=str)
-    parser.add_argument("--weightsfile", dest='weightsfile', help="weightsfile",
-                        default="yolov3.weights", type=str)
-    parser.add_argument("--reso", dest='reso', help="Input resolution of the network. Increase to increase accuracy. Decrease to increase speed",
-                        default="416", type=str)
     
     return parser.parse_args()
 
@@ -65,20 +58,25 @@ inputs = torch.randn(
 
 repo = 'epic-kitchens/action-models'
 
+args = arg_parse()           # argument parser
+videofile = args.video_file  # file path of the video file
+is_debug = args.debug        # to chceck if the user wants to activate the debugging messages
+
 class_counts = (125, 352)  # num of verbs = 125, num of nouns = 352
 segment_count = 8
-base_model = 'resnet50' # 'resnet50' or 'BNInception'
+base_model = 'resnet50'    # 'resnet50' or 'BNInception'
+modality = args.modality
 
-tsn = torch.hub.load(repo, 'TSN', class_counts, segment_count, 'RGB',
+tsn = torch.hub.load(repo, 'TSN', class_counts, segment_count, modality,
                      base_model=base_model,
                      pretrained='epic-kitchens', force_reload=True)
-trn = torch.hub.load(repo, 'TRN', class_counts, segment_count, 'RGB',
+trn = torch.hub.load(repo, 'TRN', class_counts, segment_count, modality,
                      base_model=base_model,
                      pretrained='epic-kitchens')
-mtrn = torch.hub.load(repo, 'MTRN', class_counts, segment_count, 'RGB',
+mtrn = torch.hub.load(repo, 'MTRN', class_counts, segment_count, modality,
                       base_model=base_model,
                       pretrained='epic-kitchens')
-tsm = torch.hub.load(repo, 'TSM', class_counts, segment_count, 'RGB',
+tsm = torch.hub.load(repo, 'TSM', class_counts, segment_count, modality,
                      base_model=base_model,
                      pretrained='epic-kitchens')
 
@@ -92,10 +90,7 @@ for entrypoint in torch.hub.list(repo):
 
 
 cap = cv2.VideoCapture(videofile)
-
-args = arg_parse()  # argument parser
-videofile = args.video_file  # file path of the video file
-
+P_VAL = 0.85
 
 # Initialize frame transforms.
 transform = torchvision.transforms.Compose([
@@ -123,14 +118,32 @@ frames = 0
 prev_idx = 0
 start = time.time()
 
-target_num_of_frames = 160
+# Find OpenCV version
+(major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+fps = 0
 
+# get the fps of the target video
+if int(major_ver) < 3:
+    fps = cap.get(cv2.cv.CV_CAP_PROP_FPS)
+    print("Frames per second using video.get(cv2.cv.CV_CAP_PROP_FPS): {0}".format(fps))
+else:
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    print("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
+
+#TODO
+#target_num_of_frames = fps
+#if fps < 8:
+    #target_num_of_frames = 8
+target_num_of_frames = 8
 imgs = [] # a list to store frames
 
 # change the models to the evaluation mode
 trn.eval()
 tsn.eval()
 tsm.eval()
+
+# open the file stream instance to write a file
+f = open('actionDetection_output.txt', 'w+')
 
 # load annotation files as data frames
 df_n = pd.read_csv('./epic_annotations/EPIC_noun_classes.csv')
@@ -224,6 +237,32 @@ def printVerbsAndNounsWithProbs(probs_v, idx_v, probs_n, idx_n):
 
 
 def mergeSubResults_verb(verb1, verb2, verb3, p1, p2, p3):
+    # Check if the probability value of all 3 verbs are greater than P_VAL
+    if p1 > P_VAL and p2 > P_VAL and p3 > P_VAL:
+        # If the probability value of all 3 verbs are greater than P_VAL, all 3 of them could be the answer
+        # So, rather than choosing the 1 best verb, the system will concatenate all verbs with "OR".
+        #
+        # i.e.
+        # verb1 = "put", verb2 = "turn-on", verb3 = "take"
+        # result = "put OR turn-on OR take"
+
+        if verb1 is verb2:
+            if verb2 is verb3:
+                return verb1
+            else:
+                return '{} OR {}'.format(verb1, verb3)
+        else:
+            if verb2 is verb3:
+                return '{} OR {}'.format(verb1, verb3)
+            elif verb1 is verb3:
+                return '{} OR {}'.format(verb1, verb2)
+            else:
+                return '{} OR {} OR {}'.format(verb1, verb2, verb3)
+
+    # Choose the best verb by comparing each verbs and probability values.
+    # If the system cannot choose the best verb, than it will just use the random method to
+    # find the best verb from 3 chosen verbs.
+
     if verb1 is verb2:
         if verb2 is verb3:
             return verb1
@@ -250,11 +289,17 @@ def mergeSubResults_verb(verb1, verb2, verb3, p1, p2, p3):
         else:
             # If there is no biggest probability value, then choose random one.
             v_list = [verb1, verb2, verb3]
-            rand_val = randrange(3) + 1
+            rand_val = randrange(3)  # rand_val = int(0..2)
             return v_list[rand_val]
 
 
 def mergeLists(first_list, second_list):
+    """
+    Merge the list of nouns.
+
+    :param first_list: The first noun list
+    :param second_list: The second noun list
+    """
     in_first = set(first_list)
     in_second = set(second_list)
     in_second_but_not_in_first = in_second - in_first
@@ -265,6 +310,10 @@ def mergeLists(first_list, second_list):
 def mergeSubResults_nouns(n1, n2, n3):
     """
     Merge the elements of lists that contain the detected nouns.
+
+    :param n1: The first noun list
+    :param n2: The second noun list
+    :param n3: The third noun list
     """
     temp_res = mergeLists(n1, n2)
     res = mergeLists(temp_res, n3)
@@ -294,8 +343,28 @@ def findBestNoun(n1, n2, n3 ,prob_n1, prob_n2, prob_n3):
             else:
                 # If there is no biggest probability value, then choose random one.
                 n_list = [n1, n2, n3]
-                rand_val = randrange(3) + 1
+                rand_val = randrange(3) #rand_val = int(0..2)
                 return n_list[rand_val]
+
+
+def removeUnnecessaryNouns(list_n, list_p):
+    best_p = list_p[0]
+    p_limit = 0
+
+    if best_p > 0.5:
+        p_limit = 0.3
+    else:
+        p_limit = best_p / 2
+    index_list = []
+
+    for i, (n, p) in enumerate(zip(list_n, list_p)):
+        if p < p_limit:
+            index_list.append(i)
+    index_list.reverse()
+    
+    for i in index_list:
+        list_n.pop(i)
+    return list_n
 
 
 def processActionDetection():
@@ -310,29 +379,33 @@ def processActionDetection():
         with torch.no_grad():
             inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
 
-
-    probs_v1, idx_v1, probs_n1, idx_n1 = extractProbsAndIndex(tsn, inputs)
+    probs_v1, idx_v1, probs_n1, idx_n1 = extractProbsAndIndex(mtrn, inputs)
     probs_v2, idx_v2, probs_n2, idx_n2 = extractProbsAndIndex(tsm, inputs)
-    probs_v3, idx_v3, probs_n3, idx_n3 = extractProbsAndIndex(trn, inputs)
+    probs_v3, idx_v3, probs_n3, idx_n3 = extractProbsAndIndex(tsn, inputs)
 
     # print out probabilities of detected verbs and nouns
-    print('TSN')
+    print('MTRN')
     verb1, probs_v1, noun_list1 = printVerbsAndNounsWithProbs(probs_v1, idx_v1, probs_n1, idx_n1)
     print('\nTSM')
     verb2, probs_v2, noun_list2 = printVerbsAndNounsWithProbs(probs_v2, idx_v2, probs_n2, idx_n2)
-    print('\nTRN')
+    print('\nTSN')
     verb3, probs_v3, noun_list3 = printVerbsAndNounsWithProbs(probs_v3, idx_v3, probs_n3, idx_n3)
 
     # get final verb
     verb_final = mergeSubResults_verb(verb1, verb2, verb3, probs_v1, probs_v2, probs_v3)
-
     # get best noun
     best_noun = findBestNoun(noun_list1[0], noun_list2[0], noun_list3[0], probs_n1[0], probs_n2[0], probs_n3[0])
-
     print('[LOG] final verb = {0}\r\n[LOG] final noun = {1}'.format(verb_final, best_noun))
+
+    # remove unnecessary nouns from each noun list
+    noun_list1 = removeUnnecessaryNouns(noun_list1, probs_n1)
+    noun_list2 = removeUnnecessaryNouns(noun_list2, probs_n2)
+    noun_list3 = removeUnnecessaryNouns(noun_list3, probs_n3)
 
     # get final noun list
     noun_list_res = mergeSubResults_nouns(noun_list1, noun_list2, noun_list3)
+
+    #TODO set the best noun as a head of the noun_list_res
 
     f.write('from {0} to {1} :\r\n'.format(prev_idx, frames))
     f.write('v={}\r\n'.format(verb_final))
@@ -342,15 +415,13 @@ def processActionDetection():
         f.write('{}\r\n'.format(noun_final))
 
 
-# open the file stream instance to write a file
-f = open('actionDetection_output.txt', 'w+')
-
-
 # use while loop to iterate the frames of the target video
 while cap.isOpened():
     ret, frame = cap.read()  # read the new frame
 
-    print('[DEBUG] frames={}'.format(frames))
+    # check if the debugging mode is activated
+    if is_debug:
+        print('[DEBUG] frames={}'.format(frames))
 
     # use if-else statement to check if there is remaining frame.
     if ret:
@@ -362,13 +433,20 @@ while cap.isOpened():
         # check the number of stored frames
         if len(imgs) >= target_num_of_frames:
             processActionDetection()
-
             imgs = []
             prev_idx = frames + 1
-    
     else:
-        break
-
+        ret2, frame2 = cap.read()
+        if ret2:
+            cv2_im = cv2.cvtColor(frame2, cv2.COLOR_BGR2RGB)
+            pil_im = Image.fromarray(cv2_im)
+            imgs.append(pil_im)
+            frames += 1
+        else:
+            # check if the debugging mode is activated
+            if is_debug:
+                print('[DEBUG] Error while reading the frame!')
+            break
     frames += 1
 
 
