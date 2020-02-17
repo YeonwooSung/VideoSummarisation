@@ -3,6 +3,16 @@ import sys
 
 
 def readLineFromOutputFile(f, frame_num_line, model_type):
+    """
+    Read lines from output files.
+
+    :param f: File stream object
+    :param frame_num_line: The line that indicates the start frame number and end frame number
+    :param model_tyep: 1 for TRN, 2 for TSN, and else for TSM
+
+    :return v: Verb
+    :return n: List of nouns
+    """
     line1 = f.readline()
     line2 = f.readline()
     line3 = f.readline()
@@ -39,8 +49,22 @@ def readLineFromOutputFile(f, frame_num_line, model_type):
     return v, n
 
 def compareWithAnswer(vTrue, nTrue, v_answer, n_answer, v, n):
-    vTrue_new = 0
-    nTrue_new = 0
+    """
+    Compare the results of prediction with the answer.
+    
+    :param vTrue: count of correct predicted verbs
+    :param nTrue: count of correct predicted nouns
+    :param v_answer: Answer verb
+    :param n_answer: Answer noun
+    :param v: The predicted verb
+    :param n: The list of predicted nouns
+
+    :return vTrue_new: Updated vTrue : vTrue + 1 if the v is equal to v_answer
+    :return nTrue_new: Updated nTrue : nTrue + 1 if the n contains the n_answer
+    """
+    vTrue_new = vTrue
+    nTrue_new = nTrue
+
     if v_answer == v:
         vTrue_new = vTrue + 1
 
@@ -52,10 +76,26 @@ def compareWithAnswer(vTrue, nTrue, v_answer, n_answer, v, n):
     return vTrue_new, nTrue_new
 
 def readAndCompareOutputs(f, f_trn, f_tsn, f_tsm):
+    """
+    Read the answers from the answer file, and compare the answers with the predictions.
+
+    :param f: File stream for answer file
+    :param f_trn: File stream for the result of TRN
+    :param f_tsn: File stream for the result of TSN
+    :param f_tsm: File stream for the result of TSM
+
+    :return total_count: Total counts
+    :return vTrue_trn: The number of correct verbs that the TRN predicted
+    :return nTrue_trn: The number of correct nouns that the TRN predicted
+    :return vTrue_tsn: The number of correct verbs that the TSN predicted
+    :return nTrue_tsn: The number of correct nouns that the TSN predicted
+    :return vTrue_tsm: The number of correct verbs that the TSM predicted
+    :return nTrue_tsm: The number of correct nouns that the TSM predicted
+    """
     if f == None or f_trn == None or f_tsn == None or f_tsm == None:
         print('readAndCompareOutputs :: Invalid arguments!')
         exit(0)
-    
+
     total_count = 0
     vTrue_trn = 0
     nTrue_trn = 0
@@ -64,11 +104,13 @@ def readAndCompareOutputs(f, f_trn, f_tsn, f_tsm):
     vTrue_tsm = 0
     nTrue_tsm = 0
 
-    # use endless loop to read until the file stream gets the eof
+    # Use endless loop to read until the file stream gets the eof
     while True:
         answer_line1 = f.readline()
         answer_line2 = f.readline()
         answer_line3 = f.readline()
+
+        # Check the file stream objects get the EOF
         if answer_line1 == "" or answer_line2 == "" or answer_line3 == "":
             break
 
@@ -88,7 +130,7 @@ def readAndCompareOutputs(f, f_trn, f_tsn, f_tsm):
         vTrue_trn, nTrue_trn = compareWithAnswer(vTrue_trn, nTrue_trn, answer_verb, answer_noun, v1, n1)
         vTrue_tsn, nTrue_tsn = compareWithAnswer(vTrue_tsn, nTrue_tsn, answer_verb, answer_noun, v2, n2)
         vTrue_tsm, nTrue_tsm = compareWithAnswer(vTrue_tsm, nTrue_tsm, answer_verb, answer_noun, v3, n3)
-    
+
     return total_count, vTrue_trn, nTrue_trn, vTrue_tsn, nTrue_tsn, vTrue_tsm, nTrue_tsm
 
 if __name__ == '__main__':
@@ -111,8 +153,10 @@ if __name__ == '__main__':
     f_tsn = open('tsn_output.txt', 'r')
     f_tsm = open('tsm_output.txt', 'r')
 
+    # read and compare the results of predictions with answer
     total_count, vTrue_trn, nTrue_trn, vTrue_tsn, nTrue_tsn, vTrue_tsm, nTrue_tsm = readAndCompareOutputs(f_answer, f_trn, f_tsn, f_tsm)
     
+    # calculate the accuracy scores
     vTrue_trn = vTrue_trn / total_count
     nTrue_trn = nTrue_trn / total_count
     vTrue_tsm = vTrue_tsm / total_count
@@ -120,9 +164,9 @@ if __name__ == '__main__':
     vTrue_tsn = vTrue_tsn / total_count
     nTrue_tsn = nTrue_tsn / total_count
 
-    print('TRN -> verb accuracy = {0}%, noun accuracy = {1}%'.format(vTrue_trn, nTrue_trn))
-    print('TSN -> verb accuracy = {0}%, noun accuracy = {1}%'.format(vTrue_tsn, nTrue_tsn))
-    print('TSM -> verb accuracy = {0}%, noun accuracy = {1}%'.format(vTrue_tsm, nTrue_tsm))
+    print('TRN -> verb accuracy = {0:.4f}%, noun accuracy = {1:.4f}%'.format(vTrue_trn, nTrue_trn))
+    print('TSN -> verb accuracy = {0:.4f}%, noun accuracy = {1:.4f}%'.format(vTrue_tsn, nTrue_tsn))
+    print('TSM -> verb accuracy = {0:.4f}%, noun accuracy = {1:.4f}%'.format(vTrue_tsm, nTrue_tsm))
 
     # close the file stream objects
     f_trn.close()
