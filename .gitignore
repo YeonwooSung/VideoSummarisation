@@ -8,4 +8,4 @@ __pycache__
 *.mp4
 *.tar
 epicKitchens_pretrained/*.txt
-*.txt
+*_output.txt

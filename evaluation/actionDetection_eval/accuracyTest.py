@@ -134,10 +134,14 @@ def readAndCompareOutputs(f, f_trn, f_tsn, f_tsm):
     return total_count, vTrue_trn, nTrue_trn, vTrue_tsn, nTrue_tsn, vTrue_tsm, nTrue_tsm
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        print('Usage: python3 accuracyTest.py <file_path_of_answer_file>')
+    if len(sys.argv) < 5:
+        print('Usage: python3 accuracyTest.py <file_path_of_answer_file> <trn_file_path> <tsn_file_path> <tsm_file_path>')
         exit(1)
     answerFile = sys.argv[1]
+    trn_path = sys.argv[2]
+    tsn_path = sys.argv[3]
+    tsm_path = sys.argv[4]
+
     f_answer = open(answerFile, 'r')
 
     if not os.path.exists(answerFile):
@@ -149,9 +153,9 @@ if __name__ == '__main__':
         exit(0)
 
     # input file stream objects for intermediate output files
-    f_trn = open('trn_output.txt', 'r')
-    f_tsn = open('tsn_output.txt', 'r')
-    f_tsm = open('tsm_output.txt', 'r')
+    f_trn = open(trn_path, 'r')
+    f_tsn = open(tsn_path, 'r')
+    f_tsm = open(tsm_path, 'r')
 
     # read and compare the results of predictions with answer
     total_count, vTrue_trn, nTrue_trn, vTrue_tsn, nTrue_tsn, vTrue_tsm, nTrue_tsm = readAndCompareOutputs(f_answer, f_trn, f_tsn, f_tsm)
