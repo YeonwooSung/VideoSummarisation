@@ -22,8 +22,10 @@ def arg_parse():
 
     parser = argparse.ArgumentParser(description='YOLO v3 Detection Module')
     parser.add_argument("--bs", dest = "bs", help = "Batch size", default = 1)
-    parser.add_argument("--confidence", dest = "confidence", help = "Object Confidence to filter predictions", default = 0.7)
-    parser.add_argument("--nms_thresh", dest = "nms_thresh", help = "NMS Threshhold", default = 0.4)
+    parser.add_argument("--confidence", dest = "confidence", help = "Object Confidence to filter predictions - COCO model", default = 0.7)
+    parser.add_argument("--confidence", dest = "confidence", help = "Object Confidence to filter predictions - Food100 model", default = 0.7)
+    parser.add_argument("--nms_thresh", dest = "nms_thresh", help = "NMS Threshhold of YOLO COCO model", default = 0.4)
+    parser.add_argument("--nms_thresh", dest = "nms_thresh", help = "NMS Threshhold of Food100 retrained YOLO model", default = 0.4)
     parser.add_argument("--cfg", dest = 'cfgfile', help = 
                         "Config file",
                         default = "cfg/yolov3.cfg", type = str)
@@ -34,20 +36,20 @@ def arg_parse():
                         "Input resolution of the network. Increase to increase accuracy. Decrease to increase speed",
                         default = "416", type = str)
     parser.add_argument("--video", dest = "videofile", help = "Video file to run detection on", default = "video.avi", type = str)
-    parser.add_argument('--logPath', dest="logPath", help="The file path of the text file that the object detection system logs the logging data", default='./testOutput.txt', type=str)
-    parser.add_argument('--action', dest='actionFile', help="The file path of the text file that contains the output of the acion detection subsystem", default='./actionDetection_output.txt', type=str)
+    parser.add_argument('--logPath', dest="logPath", help="The file path of the text file that the object detection system logs the logging data", default='./output/testOutput.txt', type=str)
 
     return parser.parse_args()
 
 
 args = arg_parse()
 
+# constants for the YOLO model
 batch_size = int(args.bs)
-confidence = float(args.confidence)
-nms_thesh = float(args.nms_thresh)
-
-output_path = args.logPath
-actionDetection_output_filepath = args.actionFile
+confidence_coco = float(args.confidence)  # confidence limit of the YOLO COCO model
+confidence_food = float(args.confidence)  # confidence limit of the YOLO Food100 model
+nms_thresh_coco = float(args.nms_thresh)  # threshold value of the YOLO COCO model
+nms_thresh_food = float(args.nms_thresh)  # threshold value of the YOLO Food100 model
+output_path = args.logPath  # file path of the log file
 
 
 videofile = args.videofile  # args.videofile = path to the video file.
@@ -80,15 +82,14 @@ start = 0
 # check if the CUDA is available
 CUDA = torch.cuda.is_available()
 
-
+# load object names for COCO model
 num_classes = 80
 classes = load_classes("data/coco.names")
 
+# load object names for Food100 model
 num_classes_food = 100
 classes_food = load_classes("data/food100.names")
 
-# A list to store the detected objects
-objectList = []
 
 #Set up the neural network
 print("Loading network.....")
@@ -161,7 +162,7 @@ def parseResult(x, results, target_classes, detected_object_list):
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
 
-vWriter = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), numOfFrames_output, (frame_width, frame_height))
+vWriter = cv2.VideoWriter('output/output.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), numOfFrames_output, (frame_width, frame_height))
 
 frames = 0
 start = time.time()
@@ -169,10 +170,6 @@ start = time.time()
 
 # open the file stream instance to write a file
 f = open(output_path, 'w+')
-
-actionDetection_output = []
-with open(actionDetection_output_filepath) as f_action:
-    actionDetection_output = f_action.read().splitlines()
 
 
 # use while loop to iterate the frames of the target video
@@ -200,9 +197,9 @@ while cap.isOpened():
         with torch.no_grad():
             output_food = model_foodDomain(Variable(img), CUDA)
 
-
-        output_general = write_results(output_general, confidence, num_classes, nms_conf = nms_thesh)
-        output_food = write_results(output_food, confidence, num_classes_food, nms_conf=nms_thesh)
+        # gets the results of the object detection
+        output_general = write_results(output_general, confidence_coco, num_classes, nms_conf=nms_thresh_coco)
+        output_food = write_results(output_food, confidence_food, num_classes_food, nms_conf=nms_thresh_food)
 
         # check the type of the output
         if type(output_general) == int or type(output_food) == int:
@@ -249,14 +246,8 @@ while cap.isOpened():
             output_food[i, [1, 3]] = torch.clamp(output_food[i, [1, 3]], 0.0, im_dim_food[i, 0])
             output_food[i, [2,4]] = torch.clamp(output_food[i, [2,4]], 0.0, im_dim_food[i,1])
 
-
         classes = load_classes('data/coco.names')
         classes_food = load_classes('data/food100.names')
-
-        colors = pkl.load(open("pallete", "rb")) #load the binary data of colors from the pallete
-
-        # write text to the file
-        f.write('\ncurrent frame: %d\n' % frames)
 
         detected_general = []
         detected_food = []
@@ -278,7 +269,9 @@ while cap.isOpened():
         if key == ord('q'):
             break
 
-        #TODO
+
+        f.write('\ncurrent frame: %d\n' % frames)
+
         # iterate the object list, and write the objects in the text file via file stream
         for obj in objectList:
             f.write('\t{0}\r\n'.format(obj.getInfoString()))

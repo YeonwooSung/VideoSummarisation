@@ -144,7 +144,7 @@ tsn.eval()
 tsm.eval()
 
 # open the file stream instance to write a file
-f = open('actionDetection_output.txt', 'w+')
+f = open('output/actionDetection_output.txt', 'w+')
 
 # load annotation files as data frames
 df_n = pd.read_csv('./epic_annotations/EPIC_noun_classes.csv')
@@ -444,9 +444,9 @@ def processActionDetection(generate_output_file, fs, trn_fs=None, tsm_fs=None, t
 
 
 # open the file stream instance to write a file
-f_trn = open('trn_output.txt', 'w+')
-f_tsn = open('tsn_output.txt', 'w+')
-f_tsm = open('tsm_output.txt', 'w+')
+f_trn = open('output/trn_output.txt', 'w+')
+f_tsn = open('output/tsn_output.txt', 'w+')
+f_tsm = open('output/tsm_output.txt', 'w+')
 
 
 generate_output_file = False
