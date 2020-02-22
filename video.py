@@ -50,9 +50,29 @@ output_path = args.logPath
 actionDetection_output_filepath = args.actionFile
 
 
+videofile = args.videofile  # args.videofile = path to the video file.
+
+cap = cv2.VideoCapture(videofile)  # cap = cv2.VideoCapture(0) -> for webcam
+
+# use assert statement to check if the VideoCpature object is available to use
+assert cap.isOpened(), 'Cannot capture source'
+
+# Find OpenCV version
+(major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+fps = 0
+
+# get the fps of the target video
+if int(major_ver) < 3:
+    fps = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
+    print("Frames per second using video.get(cv2.cv.CV_CAP_PROP_FPS): {0}".format(fps))
+else:
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    print("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
+
+
 # constants
 numOfFrames_output = 10
-numOfTurns = 50 #TODO 5? 10? 50? 100?
+numOfTurns = fps #TODO 5? 10? 50? 100?
 
 # global variables to check the cost time
 start = 0
@@ -67,10 +87,8 @@ classes = load_classes("data/coco.names")
 num_classes_food = 100
 classes_food = load_classes("data/food100.names")
 
-# lists to store the detected objects
+# A list to store the detected objects
 objectList = []
-previousList = []
-lastSelectedList = []
 
 #Set up the neural network
 print("Loading network.....")
@@ -131,8 +149,6 @@ def parseResult(x, results, target_classes, detected_object_list):
     obj.setLabel(label)
     obj.setVertices(vertex1, vertex2)
 
-    f.write('\t{0}\r\n'.format(obj.getInfoString()))
-
     # push the detected object to the list
     detected_object_list.append(obj)
 
@@ -141,13 +157,6 @@ def parseResult(x, results, target_classes, detected_object_list):
 
 
 # Detection phase
-
-videofile = args.videofile  # args.videofile = path to the video file.
-
-cap = cv2.VideoCapture(videofile)  # cap = cv2.VideoCapture(0) -> for webcam
-
-# use assert statement to check if the VideoCpature object is available to use
-assert cap.isOpened(), 'Cannot capture source'
 
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
@@ -174,6 +183,9 @@ while cap.isOpened():
     if ret:
 
         #TODO process object detection only when (frames % num of turns == 0)
+        if frames % numOfTurns != 0:
+            frames += 1
+            continue
 
         img, orig_im, dim = prep_image(frame, inp_dim)
         im_dim = torch.FloatTensor(dim).repeat(1, 2)
@@ -253,10 +265,10 @@ while cap.isOpened():
         list(map(lambda x: parseResult(x, orig_im, classes), output_general, detected_general))
         list(map(lambda x: parseResult(x, orig_im, classes_food), output_food, detected_food))
 
+        #TODO wordnet to filter the objects
+
         # merge detected_general and detected_food
         objectList = mergeDetectedObjectLists(detected_general, detected_food)
-
-        #TODO cv2.imshow("frame", frame)  # show the modified frame to the user
 
         # cv2.waitKey(time) waits for "time" miliseconds to get the value of the pressed key
         # "& 0xFF" is essential for 64bit OS - not necessary for 32bit OS
@@ -266,32 +278,15 @@ while cap.isOpened():
         if key == ord('q'):
             break
 
-
-        # compare the length of list of detected objects for the previous frame and current frame
-        if (len(previousList) > len(objectList)):
-            objectList = previousList
-        else:
-            # update the previousList to the current list
-            previousList = objectList
-
-
-        if (frames < numOfTurns):
-            vWriter.write(orig_im) #TODO is this requried??
-        elif (frames % numOfTurns == 0):
-            # iterate the object lists, and check if the object
-            if (not compareObjectLists(objectList, lastSelectedList)):
-                vWriter.write(orig_im)  # write the frame
-                #TODO get multiple frames from this point, and add those frames to the output video
-            
-            lastSelectedList = objectList
-            previousList = []
-
+        #TODO
+        # iterate the object list, and write the objects in the text file via file stream
+        for obj in objectList:
+            f.write('\t{0}\r\n'.format(obj.getInfoString()))
 
         frames += 1  # increase the number of frames that are processed
-
         timeCost = time.time() - start
         print(timeCost)
-        print("FPS of the video is {:5.2f}".format(frames / (timeCost)))
+        print("FPS of video processing is {:5.2f}".format(frames / (timeCost)))
 
     else:
         break
