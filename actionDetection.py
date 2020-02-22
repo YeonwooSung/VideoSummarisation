@@ -9,6 +9,7 @@ import re
 import cv2
 import argparse
 import pandas as pd
+import numpy as np
 from darknet import Darknet
 from util import *
 from PIL import Image
@@ -41,7 +42,7 @@ def arg_parse():
     parser.add_argument('--img_feature_dim', type=int, default=256)
     parser.add_argument('--consensus_type', type=str, default='TRNmultiscale')
     parser.add_argument('--weights', type=str, default='pretrain/TRN_jester_RGB_BNInception_TRNmultiscale_segment8_best.pth.tar')
-    
+
     return parser.parse_args()
 
 
@@ -130,11 +131,11 @@ else:
     fps = cap.get(cv2.CAP_PROP_FPS)
     print("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
 
-#TODO
-#target_num_of_frames = fps
-#if fps < 8:
-    #target_num_of_frames = 8
-target_num_of_frames = 8
+
+target_num_of_frames = fps
+if fps < 8:
+    target_num_of_frames = 8
+
 imgs = [] # a list to store frames
 
 # change the models to the evaluation mode
@@ -367,7 +368,25 @@ def removeUnnecessaryNouns(list_n, list_p):
     return list_n
 
 
-def processActionDetection():
+def recordResultOfModel(verb, nouns, fs, prev_index, cur_index):
+    """
+    Record the result of each model by using the given file stream
+
+    :param verb:       A detected verb
+    :param nouns:      A list of detected nouns
+    :param fs:         The output file stream object
+    :param prev_index: Previous index
+    :param cur_index:  Current index
+    """
+    fs.write('from {0} to {1} :\r\n'.format(prev_index, cur_index))
+    fs.write('v={}\r\n'.format(verb))
+    fs.write('n={}\r\n'.format(len(nouns)))
+
+    for noun_final in nouns:
+        fs.write('{}\r\n'.format(noun_final))
+
+
+def processActionDetection(generate_output_file, fs, trn_fs=None, tsm_fs=None, tsn_fs=None):
     input_frames = load_frames(imgs)
     print(input_frames)
     data = transform(input_frames)
@@ -391,6 +410,14 @@ def processActionDetection():
     print('\nTSN')
     verb3, probs_v3, noun_list3 = printVerbsAndNounsWithProbs(probs_v3, idx_v3, probs_n3, idx_n3)
 
+    #TODO testing
+    if trn_fs:
+        recordResultOfModel(verb1, noun_list1, trn_fs, prev_idx, frames)
+    if tsn_fs:
+        recordResultOfModel(verb1, noun_list1, tsn_fs, prev_idx, frames)
+    if tsm_fs:
+        recordResultOfModel(verb1, noun_list1, tsm_fs, prev_idx, frames)
+
     # get final verb
     verb_final = mergeSubResults_verb(verb1, verb2, verb3, probs_v1, probs_v2, probs_v3)
     # get best noun
@@ -407,13 +434,22 @@ def processActionDetection():
 
     #TODO set the best noun as a head of the noun_list_res
 
-    f.write('from {0} to {1} :\r\n'.format(prev_idx, frames))
-    f.write('v={}\r\n'.format(verb_final))
-    f.write('n={}\r\n'.format(len(noun_list_res)))
+    if generate_output_file:
+        fs.write('from {0} to {1} :\r\n'.format(prev_idx, frames))
+        fs.write('v={}\r\n'.format(verb_final))
+        fs.write('n={}\r\n'.format(len(noun_list_res)))
 
-    for noun_final in noun_list_res:
-        f.write('{}\r\n'.format(noun_final))
+        for noun_final in noun_list_res:
+            fs.write('{}\r\n'.format(noun_final))
 
+
+# open the file stream instance to write a file
+f_trn = open('trn_output.txt', 'w+')
+f_tsn = open('tsn_output.txt', 'w+')
+f_tsm = open('tsm_output.txt', 'w+')
+
+
+generate_output_file = False
 
 # use while loop to iterate the frames of the target video
 while cap.isOpened():
@@ -432,7 +468,7 @@ while cap.isOpened():
 
         # check the number of stored frames
         if len(imgs) >= target_num_of_frames:
-            processActionDetection()
+            processActionDetection(generate_output_file, f, trn_fs=f_trn, tsm_fs=f_tsm, tsn_fs=f_tsn)
             imgs = []
             prev_idx = frames + 1
     else:
@@ -452,8 +488,17 @@ while cap.isOpened():
 
 # check if there is any remaining frames that the action detection system did not check
 if len(imgs) > segment_count:
-    processActionDetection()
+    try:
+        processActionDetection(generate_output_file, f, trn_fs=f_trn, tsm_fs=f_tsm, tsn_fs=f_tsn)
+    except RuntimeError:
+        if is_debug:
+            print('[DEBUG] Error while processing the last {} frames'.format(len(imgs)))
 
+
+# close the file stream objects for intermediate results of each model
+f_trn.close()
+f_tsn.close()
+f_tsm.close()
 
 f.close() # close the file stream
 cap.release() # release the VideoCapture object
