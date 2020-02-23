@@ -13,6 +13,7 @@ from detectedObject import DetectedObject, compareObjectLists, mergeDetectedObje
 import pickle as pkl
 import pandas as pd
 import random
+import math
 
 
 def arg_parse():
@@ -20,12 +21,12 @@ def arg_parse():
     Parse arguements to the detect module.
     """
 
-    parser = argparse.ArgumentParser(description='YOLO v3 Detection Module')
+    parser = argparse.ArgumentParser(description='Object detection for Video Summarisation by using YOLOv3 models')
     parser.add_argument("--bs", dest = "bs", help = "Batch size", default = 1)
-    parser.add_argument("--confidence", dest = "confidence", help = "Object Confidence to filter predictions - COCO model", default = 0.7)
-    parser.add_argument("--confidence", dest = "confidence", help = "Object Confidence to filter predictions - Food100 model", default = 0.7)
-    parser.add_argument("--nms_thresh", dest = "nms_thresh", help = "NMS Threshhold of YOLO COCO model", default = 0.4)
-    parser.add_argument("--nms_thresh", dest = "nms_thresh", help = "NMS Threshhold of Food100 retrained YOLO model", default = 0.4)
+    parser.add_argument("--confidence_coco", dest = "confidence_coco", help = "Object Confidence to filter predictions - COCO model", default = 0.5)
+    parser.add_argument("--confidence_food", dest = "confidence_food", help = "Object Confidence to filter predictions - Food100 model", default = 0.3)
+    parser.add_argument("--nms_thresh_coco", dest = "nms_thresh_coco", help = "NMS Threshhold of YOLO COCO model", default = 0.3)
+    parser.add_argument("--nms_thresh_food", dest = "nms_thresh_food", help = "NMS Threshhold of Food100 retrained YOLO model", default = 0.3)
     parser.add_argument("--cfg", dest = 'cfgfile', help = 
                         "Config file",
                         default = "cfg/yolov3.cfg", type = str)
@@ -45,10 +46,10 @@ args = arg_parse()
 
 # constants for the YOLO model
 batch_size = int(args.bs)
-confidence_coco = float(args.confidence)  # confidence limit of the YOLO COCO model
-confidence_food = float(args.confidence)  # confidence limit of the YOLO Food100 model
-nms_thresh_coco = float(args.nms_thresh)  # threshold value of the YOLO COCO model
-nms_thresh_food = float(args.nms_thresh)  # threshold value of the YOLO Food100 model
+confidence_coco = float(args.confidence_coco)  # confidence limit of the YOLO COCO model
+confidence_food = float(args.confidence_food)  # confidence limit of the YOLO Food100 model
+nms_thresh_coco = float(args.nms_thresh_coco)  # threshold value of the YOLO COCO model
+nms_thresh_food = float(args.nms_thresh_food)  # threshold value of the YOLO Food100 model
 output_path = args.logPath  # file path of the log file
 
 
@@ -65,10 +66,10 @@ fps = 0
 
 # get the fps of the target video
 if int(major_ver) < 3:
-    fps = int(cap.get(cv2.cv.CV_CAP_PROP_FPS))
+    fps = round(cap.get(cv2.cv.CV_CAP_PROP_FPS))
     print("Frames per second using video.get(cv2.cv.CV_CAP_PROP_FPS): {0}".format(fps))
 else:
-    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    fps = round(cap.get(cv2.CAP_PROP_FPS))
     print("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
 
 
@@ -246,9 +247,6 @@ while cap.isOpened():
             output_food[i, [1, 3]] = torch.clamp(output_food[i, [1, 3]], 0.0, im_dim_food[i, 0])
             output_food[i, [2,4]] = torch.clamp(output_food[i, [2,4]], 0.0, im_dim_food[i,1])
 
-        classes = load_classes('data/coco.names')
-        classes_food = load_classes('data/food100.names')
-
         detected_general = []
         detected_food = []
 
@@ -270,11 +268,12 @@ while cap.isOpened():
             break
 
 
-        f.write('\ncurrent frame: %d\n' % frames)
+        f.write('current frame: %d\n' % frames)
 
         # iterate the object list, and write the objects in the text file via file stream
         for obj in objectList:
             f.write('\t{0}\r\n'.format(obj.getInfoString()))
+            #f.write('\t{}\n'.format(obj.getLabel()))
 
         frames += 1  # increase the number of frames that are processed
         timeCost = time.time() - start
