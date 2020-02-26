@@ -25,7 +25,7 @@ def arg_parse():
     Parse arguements to the detect module.
     """
 
-    parser = argparse.ArgumentParser(description='EPIC Kitchen dataset testing')
+    parser = argparse.ArgumentParser(description='Action detection system for Video Summarsation by using EPIC Kitchen Models')
     parser.add_argument('--video_file', type=str, default='./video.avi')
 
     parser.add_argument('--debug', type=str2bool, nargs='?', const=True, default=False, help="Activate debug mode.")
@@ -449,7 +449,7 @@ f_tsn = open('output/tsn_output.txt', 'w+')
 f_tsm = open('output/tsm_output.txt', 'w+')
 
 
-generate_output_file = False
+generate_output_file = True #TODO False
 
 # use while loop to iterate the frames of the target video
 while cap.isOpened():
