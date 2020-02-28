@@ -21,16 +21,29 @@ def arg_parse():
     return parser.parse_args()
 
 
-def calculateSimilarity(word1, word2):
+def validateWord(word):
+    if ':' in word:
+        splitted = word.split(':')
+        return splitted[0]
+    return word
+
+def calculateSimilarity(w1, w2):
     """
     Calculate the similarity between 2 words by using wordnet.
 
-    :param word1: The first word
-    :param word2: The second word
+    :param w1: The first word
+    :param w2: The second word
 
     :return max_sims: The calculated similarity value.
     :return checker:  The flag value that shows if an error occurred while executing this function.
     """
+    if w1 == w2:
+        return None, False
+
+    # validate the form of given words
+    word1 = validateWord(w1)
+    word2 = validateWord(w2)
+
     # get synsets for the object and noun
     syns1 = wn.synsets(word1)
     syns2 = wn.synsets(word2)
@@ -43,36 +56,45 @@ def calculateSimilarity(word1, word2):
         # iterate all elements in syns1 and syns2
         for sense1, sense2 in product(syns1, syns2):
             s = wn.wup_similarity(sense1, sense2)
-            sims.append(s)
-        max_sims = max(sims)
-        checker = True
+            if s:
+                sims.append(s)
+        if len(sims) > 0:
+            max_sims = max(sims)
+            checker = True
     else:
         print('[DEBUG] calculateSimilarity::Error ==> word1=({}), word2=({})'.format(word1, word2))
     return max_sims, checker
 
 
-def compareAndCalculateSimilarityList(list1, list2):
+def compareAndCalculateSimilarityList(comb_list):
     """
     """
     result = []
     syns_res = {}
 
-    for w2 in list2:
-        for w1 in list1:
-            max_sims, checker = calculateSimilarity(w2, w1)
+    for comb in comb_list:
+        w1 = comb[0]
+        w2 = comb[1]
 
-            # check if the error occurred in the calculateSimilarity() function
-            if not checker:
-                # check if the syns_res contains the current word as an attribute
-                if w2 not in syns_res:
-                    syns_res[w2] = [max_sims]
-                else:
-                    syns_res[w2].append(max_sims)
+        max_sims, checker = calculateSimilarity(w2, w1)
+        # check if the error occurred in the calculateSimilarity() function
+        if checker:
+            # check if the syns_res contains the current word as an attribute
+            if w2 not in syns_res:
+                syns_res[w2] = [max_sims]
+            else:
+                syns_res[w2].append(max_sims)
+
+    resultList = []
+
+    # iterate a dictionary to find the most irrelevant word that should be removed
     for key in syns_res:
         sims = syns_res[key]
+        # calculate the sum of all similarity values in a list
+        sum_sims = sum(sims)
+        resultList.append((key, sum_sims))
 
-        #TODO key = object, sims = list of similarity values
-        #TODO get the average value of the similarity values, and find the least important obj ??
+    return resultList
 
 
 def readActionDetectionResult(f, exec_mode):
@@ -150,12 +172,23 @@ def checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, 
 
             # get a list of all possible combinations of verbs and nouns
             combinations_v_n = getAllCombinationsOf2Lists(v_list, n_list)
+            # get the list of tuples where each tuple contains the noun and the sum of similarity values
+            res_list = compareAndCalculateSimilarityList(combinations_v_n)
+            #TODO
+
             # get a list of all possible combinations of verbs and objects
             combinations_v_obj = getAllCombinationsOf2Lists(v_list, objects)
+            # get the list of tuples where each tuple contains the object and the sum of similarity values
+            res_list = compareAndCalculateSimilarityList(combinations_v_obj)
+            #TODO
+
             # get a list of all possible combinations of nouns and objects
             combinations_n_obj = getAllCombinationsOf2Lists(n_list, objects)
-
+            # get the list of tuples where each tuple contains the object and the sum of similarity values
+            res_list3 = compareAndCalculateSimilarityList(combinations_n_obj)
             #TODO
+
+            #TODO ??
 
             index += 1
         else:
@@ -198,10 +231,17 @@ if __name__ == '__main__':
         start_frame = int(frame_nums[0].strip())
         end_frame = int(frame_nums[1].strip())
 
+        # check if the verb has been changed - use the verb to detect the change point
         if prev_v != v and start != start_frame:
-            #TODO change point
             if exec_mode == 'debug':
                 print('[DEBUG] change point detected - prev_v={}, v={}'.format(prev_v, v))
+
+            #TODO change point
+
+            # update values of the variables with new verb, noun list, and frame range number
+            prev_v = v
+            prev_n = n
+            start = start_frame
 
         index = checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, n, index, exec_mode)
 
