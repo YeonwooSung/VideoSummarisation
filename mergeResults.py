@@ -23,8 +23,9 @@ def arg_parse():
 
 def validateWord(word):
     if ':' in word:
-        splitted = word.split(':')
-        return splitted[0]
+        return word.split(':')[0].strip()
+    elif '-' in word:
+        return word.split('-')[0].strip()
     return word
 
 def calculateSimilarity(w1, w2):
@@ -123,21 +124,33 @@ def readActionDetectionResult(f, exec_mode):
 def readObjectDetectionResult(f, exec_mode):
     obj = None
     objList= []
+    objects = set()
+
     for l in f:
         line = l.strip()
         if 'current frame:' in line:
             if obj:
                 objList.append(obj)
             frame_num = line.replace('current frame:', '').strip()
+
+            # initialise the variables
             obj = {}
+            objects = set()
             obj['frame_num'] = int(frame_num)
             obj['objects'] = []
         else:
-            obj['objects'].append(line)
-
             # check if the user select "debug" mode
             if exec_mode == 'debug':
-                print('[DEBUG] ' + line)
+                print('[DEBUG] object=' + line)
+
+            # check if the current object is duplicating
+            if not (line in objects):
+                obj['objects'].append(line)
+            else:
+                if exec_mode == 'debug':
+                    print('[DEBUG] "{}" is a duplicating word!'.format(line))
+
+    # check if there is at least one object
     if obj:
         objList.append(obj)
     # check if the user select "debug" mode
@@ -150,6 +163,45 @@ def readObjectDetectionResult(f, exec_mode):
 def getAllCombinationsOf2Lists(list1, list2):
     all_combinations = [[i, j] for i in list1 for j in list2]
     return all_combinations
+
+
+def filterWordsByThreshold(tuple_list, exec_mode):
+    max_sim = 0
+    max_w = None
+    w_list = []
+
+    for (w, s) in tuple_list:
+        # check if the user select the debugging mode to print out the debugging message
+        if exec_mode == 'debug':
+            print('[DEBUG] word={} - sum(similarity_value)={}'.format(w, s))
+        w_list.append(w)
+
+        # check if the current similarity value is greater than previous max value
+        if s > max_sim:
+            max_w = w
+            max_sim = s
+
+    if exec_mode == 'debug':
+        print('--------------------------------')
+
+    # check if the program found the maximum similarity value
+    if max_w is None:
+        return w_list
+
+    # threshold value for filtering the unnecessary words
+    sim_thresh = max_sim / 2
+
+    # use for loop to find unnecessary words.
+    for (w, s) in tuple_list:
+        if s < sim_thresh:
+            # remove the unnecessary word, whose similarity value is less than threshold
+            w_list.remove(w)
+
+            # check if the user select the debugging mode to print out the debugging message
+            if exec_mode == 'debug':
+                print('[DEBUG] threshold_value={}, similarity_value={}, removed_word={}'.format(sim_thresh, s, w))
+
+    return w_list
 
 
 def checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, n_list, index, exec_mode):
@@ -174,21 +226,24 @@ def checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, 
             combinations_v_n = getAllCombinationsOf2Lists(v_list, n_list)
             # get the list of tuples where each tuple contains the noun and the sum of similarity values
             res_list = compareAndCalculateSimilarityList(combinations_v_n)
-            #TODO
+            # filter the unnecessary nouns by calculating the threshold similarity value
+            n_list = filterWordsByThreshold(res_list, exec_mode)
 
             # get a list of all possible combinations of verbs and objects
             combinations_v_obj = getAllCombinationsOf2Lists(v_list, objects)
             # get the list of tuples where each tuple contains the object and the sum of similarity values
             res_list = compareAndCalculateSimilarityList(combinations_v_obj)
-            #TODO
+            # filter the unnecessary objects by calculating the threshold similarity value
+            objects = filterWordsByThreshold(res_list, exec_mode)
 
             # get a list of all possible combinations of nouns and objects
             combinations_n_obj = getAllCombinationsOf2Lists(n_list, objects)
             # get the list of tuples where each tuple contains the object and the sum of similarity values
             res_list3 = compareAndCalculateSimilarityList(combinations_n_obj)
-            #TODO
+            # filter the unnecessary objects by calculating the threshold similarity value
+            objects = filterWordsByThreshold(res_list, exec_mode)
 
-            #TODO ??
+            #TODO store the updated v_list, n_list, and objects !!!
 
             index += 1
         else:
@@ -243,7 +298,10 @@ if __name__ == '__main__':
             prev_n = n
             start = start_frame
 
-        index = checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, n, index, exec_mode)
+        # To remove duplicating elements, convert list to set, and convert the set to list
+        nouns = list(set(n))
+        # calculate the similarity values to find the unnecessary words that should be removed
+        index = checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, nouns, index, exec_mode)
 
         #TODO 1) compare verb and nouns -> remove unnecessary nouns
         #TODO 2) compare verbs and objects -> remove unnecessary objects
