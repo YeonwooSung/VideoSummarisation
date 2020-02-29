@@ -18,6 +18,7 @@ import nltk
 from nltk.corpus import wordnet as wn
 from random import randrange
 
+import skvideo.io
 
 
 def arg_parse():
@@ -52,9 +53,9 @@ snippet_length = 1  # Number of frames composing the snippet, 1 for RGB, 5 for o
 snippet_channels = 3  # Number of channels in a frame, 3 for RGB, 2 for optical flow
 height, width = 224, 224
 
-inputs = torch.randn(
-    [batch_size, segment_count, snippet_length, snippet_channels, height, width]
-)
+# inputs = torch.randn(
+#     [batch_size, segment_count, snippet_length, snippet_channels, height, width]
+# )
 
 
 repo = 'epic-kitchens/action-models'
@@ -64,7 +65,6 @@ videofile = args.video_file  # file path of the video file
 is_debug = args.debug        # to chceck if the user wants to activate the debugging messages
 
 class_counts = (125, 352)  # num of verbs = 125, num of nouns = 352
-segment_count = 8
 base_model = 'resnet50'    # 'resnet50' or 'BNInception'
 modality = args.modality
 
@@ -130,7 +130,6 @@ if int(major_ver) < 3:
 else:
     fps = cap.get(cv2.CAP_PROP_FPS)
     print("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
-
 
 target_num_of_frames = fps
 if fps < 8:
@@ -388,7 +387,7 @@ def recordResultOfModel(verb, nouns, fs, prev_index, cur_index):
 
 def processActionDetection(generate_output_file, fs, trn_fs=None, tsm_fs=None, tsn_fs=None):
     input_frames = load_frames(imgs)
-    print(input_frames)
+    print('The number of frames = {}'.format(len(input_frames)))
     data = transform(input_frames)
 
     if CUDA:
@@ -451,7 +450,7 @@ f_tsm = open('output/tsm_output.txt', 'w+')
 
 generate_output_file = True #TODO False
 
-# use while loop to iterate the frames of the target video
+# use while loop to read the frames of the target video
 while cap.isOpened():
     ret, frame = cap.read()  # read the new frame
 
@@ -472,11 +471,12 @@ while cap.isOpened():
             imgs = []
             prev_idx = frames + 1
     else:
-        ret2, frame2 = cap.read()
-        if ret2:
-            cv2_im = cv2.cvtColor(frame2, cv2.COLOR_BGR2RGB)
+        ret, frame = cap.read()
+        if ret:
+            # convert opencv image to PIL image format
+            cv2_im = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             pil_im = Image.fromarray(cv2_im)
-            imgs.append(pil_im)
+            imgs.append(pil_im) # append the image to the list
             frames += 1
         else:
             # check if the debugging mode is activated
@@ -485,6 +485,58 @@ while cap.isOpened():
             break
     frames += 1
 
+
+cap.release()  # release the VideoCapture object
+
+
+# check if there is any remaining frames that the action detection system did not check
+if len(imgs) > segment_count:
+    try:
+        processActionDetection(generate_output_file, f, trn_fs=f_trn, tsm_fs=f_tsm, tsn_fs=f_tsn)
+    except RuntimeError:
+        if is_debug:
+            print('[DEBUG] Error while processing the last {} frames'.format(len(imgs)))
+
+# close the file stream objects for intermediate results of each model
+f_trn.close()
+f_tsn.close()
+f_tsm.close()
+
+f.close()  # close the file stream
+
+
+print('\n\nTerminate action detection with OpenCV VideoCapture')
+print('Start action detection with skvideo\n\n')
+
+
+
+#TODO
+# open the file stream instance to write a file
+f = open('output/actionDetection_output.txt', 'w+')
+
+# open the file stream instance to write a file
+f_trn = open('output/sk_trn_output.txt', 'w+')
+f_tsn = open('output/sk_tsn_output.txt', 'w+')
+f_tsm = open('output/sk_tsm_output.txt', 'w+')
+
+# initialise the variables
+videogen = skvideo.io.vreader(videofile)
+frames = 0
+imgs = []
+prev_idx = 0
+
+# start reading video with skvideo
+for frame in videogen:
+    pil_image = Image.fromarray(frame)
+    imgs.append(pil_image)
+
+    if len(imgs) >= target_num_of_frames:
+        processActionDetection(generate_output_file, f, trn_fs=f_trn, tsm_fs=f_tsm, tsn_fs=f_tsn)
+        imgs = []
+        print('frames={}'.format(frames))
+        prev_idx = frames + 1
+
+    frames += 1
 
 # check if there is any remaining frames that the action detection system did not check
 if len(imgs) > segment_count:
@@ -499,6 +551,4 @@ if len(imgs) > segment_count:
 f_trn.close()
 f_tsn.close()
 f_tsm.close()
-
-f.close() # close the file stream
-cap.release() # release the VideoCapture object
+f.close()
