@@ -1,3 +1,7 @@
+#-------------------------------------------------
+# Used the code on github repository of Epic-Kitchens
+# url: <https://github.com/yjxiong/tsn-pytorch/blob/master/transforms.py>
+#-------------------------------------------------
 import torchvision
 import random
 from PIL import Image, ImageOps
