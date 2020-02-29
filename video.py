@@ -251,8 +251,8 @@ while cap.isOpened():
         detected_food = []
 
         # use the lambda to draw rectangles on the frames
-        list(map(lambda x: parseResult(x, orig_im, classes), output_general, detected_general))
-        list(map(lambda x: parseResult(x, orig_im, classes_food), output_food, detected_food))
+        list(map(lambda x: parseResult(x, orig_im, classes, detected_general), output_general))
+        list(map(lambda x: parseResult(x, orig_im, classes_food, detected_food), output_food))
 
         #TODO wordnet to filter the objects
 
