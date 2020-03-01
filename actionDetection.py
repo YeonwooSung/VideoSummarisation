@@ -17,8 +17,9 @@ import transforms
 import nltk
 from nltk.corpus import wordnet as wn
 from random import randrange
-
+import skvideo
 import skvideo.io
+
 
 
 def arg_parse():
@@ -512,7 +513,7 @@ print('Start action detection with skvideo\n\n')
 
 #TODO
 # open the file stream instance to write a file
-f = open('output/actionDetection_output.txt', 'w+')
+f = open('output/sk_actionDetection_output.txt', 'w+')
 
 # open the file stream instance to write a file
 f_trn = open('output/sk_trn_output.txt', 'w+')
