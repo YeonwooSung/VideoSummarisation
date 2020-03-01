@@ -204,7 +204,10 @@ def filterWordsByThreshold(tuple_list, exec_mode):
     return w_list
 
 
-def checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, n_list, index, exec_mode):
+def checkFrameRangeForSimilarityCalculation(f, start_frame, end_frame, objList, v, noun_list, index, results, exec_mode):
+    n_list = noun_list
+    v_list = [v]
+
     while True:
         # to avoid IndexOutOfBounds error
         if index >= len(objList):
@@ -220,7 +223,11 @@ def checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, 
         # check the range of frame number
         if start_frame <= frame_num and end_frame >= frame_num:
             objects = obj['objects']
-            v_list = [v]
+
+            # 1) compare verb and nouns -> remove unnecessary nouns
+            # 2) compare verbs and objects -> remove unnecessary objects
+            # 3) compare nouns and objects -> remove unnecessary objects
+
 
             # get a list of all possible combinations of verbs and nouns
             combinations_v_n = getAllCombinationsOf2Lists(v_list, n_list)
@@ -243,7 +250,35 @@ def checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, 
             # filter the unnecessary objects by calculating the threshold similarity value
             objects = filterWordsByThreshold(res_list, exec_mode)
 
-            #TODO store the updated v_list, n_list, and objects !!!
+            # store the verb and updated n_list, and objects by writing the text via file stream object
+            f.write('frame={}\nv={}\nn='.format(frame_num, v))
+
+            n_str = ''
+            # iterate the list of nouns
+            for noun in n_list:
+                n_str += '{} AND '.format(noun)
+            if len(n_list) > 0:
+                f.write('{}\nobj='.format(n_str[:-5]))
+            else:
+                f.write('\nobj=')
+
+            obj_str = ''
+            # iterate the list of objects
+            for obj in objects:
+                obj_str += '{} AND '.format(obj)
+
+            # check if there is no objects in the list of objects
+            if len(objects) > 0:
+                f.write('{}\n'.format(obj_str[:-5]))
+            else:
+                f.write('\n')
+            
+            results.append({
+                'v': v,
+                'n': n_list,
+                'obj': objects,
+                'frame_num': frame_num
+            })
 
             index += 1
         else:
@@ -267,10 +302,8 @@ if __name__ == '__main__':
     objList = readObjectDetectionResult(f_obj, exec_mode)
     index = 0
 
-    #TODO store the previous verbs and nouns -> compare with current verb and nouns
-    prev_v = ''
-    prev_n = []
-    start = 0
+    f = open('output/merge_result.txt', 'w+')
+    results = []
 
     while True:
         info_line, v, n = readActionDetectionResult(f_act, exec_mode)
@@ -286,28 +319,38 @@ if __name__ == '__main__':
         start_frame = int(frame_nums[0].strip())
         end_frame = int(frame_nums[1].strip())
 
-        # check if the verb has been changed - use the verb to detect the change point
-        if prev_v != v and start != start_frame:
-            if exec_mode == 'debug':
-                print('[DEBUG] change point detected - prev_v={}, v={}'.format(prev_v, v))
-
-            #TODO change point
-
-            # update values of the variables with new verb, noun list, and frame range number
-            prev_v = v
-            prev_n = n
-            start = start_frame
-
         # To remove duplicating elements, convert list to set, and convert the set to list
         nouns = list(set(n))
         # calculate the similarity values to find the unnecessary words that should be removed
-        index = checkFrameRangeForSimilarityCalculation(start_frame, end_frame, objList, v, nouns, index, exec_mode)
-
-        #TODO 1) compare verb and nouns -> remove unnecessary nouns
-        #TODO 2) compare verbs and objects -> remove unnecessary objects
-        #TODO 3) compare nouns and objects -> remove unnecessary objects
-
+        index = checkFrameRangeForSimilarityCalculation(f, start_frame, end_frame, objList, v, nouns, index, results, exec_mode)
 
     # close file stream objects
     f_obj.close()
     f_act.close()
+    f.close()
+
+    # open file stream object for compression
+    f = open('output/compress_result.txt', 'w+')
+    prev_v = ''
+    prev_n = []
+
+    # iterate the list of results of merging process, and find the change points (key frames)
+    for res in results:
+        v = res['v']
+        n_list = res['n']
+        objects = res['obj']
+        frame_num = res['frame_num']
+
+        # check if the verb has been changed to detect the change point
+        if prev_v != v:
+            if exec_mode == 'debug':
+                print('[DEBUG] change point detected - prev_v={}, v={}'.format(prev_v, v))
+            #TODO change point!!
+            f.write('{} -> prev_v={}, new_v={}\n'.format(frame_num, prev_v, v))
+
+            prev_v = v
+            prev_n = n_list
+
+        #TODO elif noun_list chagned (or objects)
+    
+    f.close()
