@@ -4,7 +4,7 @@
 \BOOKMARK [2][-]{subsection.1.1}{Motivation}{section.1}% 4
 \BOOKMARK [1][-]{section.2}{Related Works}{}% 5
 \BOOKMARK [2][-]{subsection.2.1}{Object detection for video summarization}{section.2}% 6
-\BOOKMARK [2][-]{subsection.2.2}{Motion detection to understand video}{section.2}% 7
+\BOOKMARK [2][-]{subsection.2.2}{Understanding video by detecting human motions}{section.2}% 7
 \BOOKMARK [2][-]{subsection.2.3}{Using procedural steps for summarization}{section.2}% 8
 \BOOKMARK [1][-]{section.3}{Design and Implementation}{}% 9
 \BOOKMARK [2][-]{subsection.3.1}{Mid-Project Changes}{section.3}% 10
@@ -13,22 +13,24 @@
 \BOOKMARK [3][-]{subsubsection.3.3.1}{Object Detection - YOLOv3}{subsection.3.3}% 13
 \BOOKMARK [3][-]{subsubsection.3.3.2}{Retraining the YOLOv3}{subsection.3.3}% 14
 \BOOKMARK [3][-]{subsubsection.3.3.3}{Merging the sets of detected objects}{subsection.3.3}% 15
-\BOOKMARK [3][-]{subsubsection.3.3.4}{Using wordnet to enhance the accuracy}{subsection.3.3}% 16
-\BOOKMARK [3][-]{subsubsection.3.3.5}{Skipping frames}{subsection.3.3}% 17
-\BOOKMARK [2][-]{subsection.3.4}{Action Detection}{section.3}% 18
-\BOOKMARK [3][-]{subsubsection.3.4.1}{Epic Kitchens}{subsection.3.4}% 19
-\BOOKMARK [3][-]{subsubsection.3.4.2}{Top K nouns and verbs}{subsection.3.4}% 20
-\BOOKMARK [3][-]{subsubsection.3.4.3}{Merging outputs from each action detection models}{subsection.3.4}% 21
+\BOOKMARK [3][-]{subsubsection.3.3.4}{Selecting frames that are used for object detection}{subsection.3.3}% 16
+\BOOKMARK [2][-]{subsection.3.4}{Action Detection}{section.3}% 17
+\BOOKMARK [3][-]{subsubsection.3.4.1}{Epic Kitchens}{subsection.3.4}% 18
+\BOOKMARK [3][-]{subsubsection.3.4.2}{Top K nouns and verbs}{subsection.3.4}% 19
+\BOOKMARK [3][-]{subsubsection.3.4.3}{Merging outputs from each action detection models}{subsection.3.4}% 20
+\BOOKMARK [3][-]{subsubsection.3.4.4}{Action detection with OpenCV and scikit-video}{subsection.3.4}% 21
 \BOOKMARK [2][-]{subsection.3.5}{Merging the sub-systems}{section.3}% 22
-\BOOKMARK [3][-]{subsubsection.3.5.1}{Merging sub-systems}{subsection.3.5}% 23
-\BOOKMARK [1][-]{section.4}{Results and Discussion}{}% 24
-\BOOKMARK [2][-]{subsection.4.1}{Evaluation}{section.4}% 25
-\BOOKMARK [2][-]{subsection.4.2}{Comparison with DOER}{section.4}% 26
-\BOOKMARK [2][-]{subsection.4.3}{Future Work and Improvements}{section.4}% 27
-\BOOKMARK [1][-]{section.5}{Conclusion}{}% 28
-\BOOKMARK [1][-]{section.6}{References}{}% 29
-\BOOKMARK [1][-]{section.7}{Appendix}{}% 30
-\BOOKMARK [2][-]{subsection.7.1}{Instructions}{section.7}% 31
-\BOOKMARK [2][-]{subsection.7.2}{Technologies Used}{section.7}% 32
-\BOOKMARK [3][-]{subsubsection.7.2.1}{YOLOv3}{subsection.7.2}% 33
-\BOOKMARK [3][-]{subsubsection.7.2.2}{Action Detection Model}{subsection.7.2}% 34
+\BOOKMARK [3][-]{subsubsection.3.5.1}{Filtering the most inrelevant words}{subsection.3.5}% 23
+\BOOKMARK [3][-]{subsubsection.3.5.2}{Compression of the results}{subsection.3.5}% 24
+\BOOKMARK [1][-]{section.4}{Results and Discussion}{}% 25
+\BOOKMARK [2][-]{subsection.4.1}{Comparison with DOER}{section.4}% 26
+\BOOKMARK [2][-]{subsection.4.2}{Evaluation}{section.4}% 27
+\BOOKMARK [3][-]{subsubsection.4.2.1}{Confusion Matrix of retrained YOLO models}{subsection.4.2}% 28
+\BOOKMARK [2][-]{subsection.4.3}{Future Work and Improvements}{section.4}% 29
+\BOOKMARK [1][-]{section.5}{Conclusion}{}% 30
+\BOOKMARK [1][-]{section.6}{References}{}% 31
+\BOOKMARK [1][-]{section.7}{Appendix}{}% 32
+\BOOKMARK [2][-]{subsection.7.1}{Instructions}{section.7}% 33
+\BOOKMARK [2][-]{subsection.7.2}{Technologies Used}{section.7}% 34
+\BOOKMARK [3][-]{subsubsection.7.2.1}{YOLOv3}{subsection.7.2}% 35
+\BOOKMARK [3][-]{subsubsection.7.2.2}{Action Detection Model}{subsection.7.2}% 36

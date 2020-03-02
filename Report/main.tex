@@ -68,11 +68,11 @@ Similarly, \hyperlink{ref19}{X. Yu et al. [19]} proposed a ball tracking framewo
 
 As you could see above, many researchers tried to make the system to understand the video by using object detection and object tracking methods. And to achieve this, as the previous papers did so, choosing a suitable video category as a target is important.
 
-As you know, a video contains not only the sequence of images but also audio data. If you want to make the program to understand the video that the audio data contain the most essential information, then the object tracking method would not work for those videos. Also, some video has subtitles, which might contain important information. In this case, the object detection method would not be helpful to understand the contents. However, if the domain of the video is soccer, then the object tracking method could be helpful to understand the video since it is safe to assume that all essential information of the soccer game is included in the frames. Henceforth, it is possible to say that the category of the video is important to use the object detection system.
+As you know, a video contains not only a stream of images but also audio data. If you want to make the computer program understand the video that the audio data contain the most essential information, then the object tracking method would not work for those videos. Also, some video has subtitles, which might contain important information. In this case, the object detection method would not be helpful to understand the contents. However, if the category of the video is sports video (i.e. soccer games), then the object tracking method could be helpful to understand the video since it is safe to assume that all essential information of the soccer game is included in the frames. Henceforth, it is possible to say that the category of the video is important to use the object detection system.
 
-\subsection{Motion detection to understand video}
+\subsection{Understanding video by detecting human motions}
 
-Some researchers tried to implement the video summarization system with the motion tracking method. In 2013, P. Jodoin et al. published a paper called \hyperlink{ref20}{Meta-tracking for video scene understanding [20]}, which presents a method called meta-tracking method. It is used for extracting dominant motion patterns and the main entry and exit areas from a surveillance video. The meta-tracking method first computes the motion histograms for each pixel and performs the motion tracking by using those generated histogram values. According to P. Jodoin et al., the meta-tracking procedure is a unique way to connect low-level motion features to long-range motion patterns. This paper stated that by using this method, the program could extract features about motion patterns, which could be used for understanding the semantic of the video.
+There were various attempts of implementing the video summarization system by applying the motion tracking method. In 2013, P. Jodoin et al. published a paper called \hyperlink{ref20}{Meta-tracking for video scene understanding [20]}, which presents a method called meta-tracking method. It is used for extracting dominant motion patterns and the main entry and exit areas from a surveillance video. The meta-tracking method first computes the motion histograms for each pixel and performs the motion tracking by using those generated histogram values. According to P. Jodoin et al., the meta-tracking procedure is a unique way to connect low-level motion features to long-range motion patterns. This paper stated that by using this method, the program could extract features about motion patterns, which could be used for understanding the semantic of the video.
 
 Most papers for sports video summarization are suggesting their own motion tracking (or action detecting) algorithm. Clearly, this is because that the action is the most important thing in the sports video. By detecting, compressing, and summarizing the motions in the video, the system could understand and summarize the sports video. Therefore, it is possible to say that by choosing the suitable category, the system would be able to understand the semantics of the video. Once the system could understand the semantics of the video, then the system would be able to summarize the video.
 
@@ -110,35 +110,43 @@ The \hyperlink{ref14}{object tracking system [14]} is a component that keeps tra
 
 "YOLO", which stands for You Only Look Once, is a real-time object detection system that is one of the most widely used object detection models. In this project, the YOLOv3 model is used to detect the objects in each frame of the video. According to the \hyperlink{ref2}{J. Redmon et al. [2]}, the YOLOv3 guarantees to detect objects within short time. With the COCO dataset, the YOLOv3 could handle 45 frames per second with 51\% of accuracy, where the RetinaNet only could handle 15 frames per second with 50\% of accuracy. Henceforth, it would be possible to say that the YOLOv3 is extremely fast and accurate.
 
-In general, most detection systems repurpose classifiers or localizers to perform detection. Those detection systems apply the model to an image at multiple locations and scales, and consider the high scoring regions of the image as detections. However, the YOLO model uses a different approach. In the paper, \hyperlink{ref2}{J. Redmon et al. [2]} mentioned that YOLO applies a single neural network to the full image. This network divides the image into regions and predicts bounding boxes and probabilities for each region. These bounding boxes are weighted by the predicted probabilities. By doing this, the YOLO model has several advantages over classifier-based systems. Firstly, the predictions are informed by the global context in the image, since YOLO looks at the whole image at test time. Moreover, the YOLO makes predictions with a single network evaluation unlike the R-CNN model, which requires thousands of networks for a single image.
+In general, most detection systems repurpose classifiers or localizers to perform detection. Those detection systems apply the model to an image at multiple locations and scales, and consider the high scoring regions of the image as detections. However, the YOLO model uses a different approach. According to \hyperlink{ref2}{J. Redmon et al. [2]}, YOLO applies a single neural network to the full image. This network divides the image into regions and predicts bounding boxes and probabilities for each region. These bounding boxes are weighted by the predicted probabilities. By doing this, the YOLO model has several advantages over classifier-based systems. Firstly, the predictions are informed by the global context in the image, since YOLO looks at the whole image at test time. Moreover, the YOLO makes predictions with a single network evaluation unlike the R-CNN model, which requires thousands of networks for a single image.
 
 Basically, the YOLOv3 makes the predictions to find the bounding boxes. For each bounding box, the YOLOv3 model uses the multi-label classification to predict the class that the given bounding box may contain. While making the prediction, the YOLOv3 model uses the feature extractor, which has several convolutional layers, to extract the features from each bounding box. By using the extracted features, it predicts to find the class that is most suitable to the given bounding box, and return the name of the detected object and the coordinates of the bounding box. By using this algorithm, the YOLOv3 could detect objects in the image within a short time with fairly good accuracy.
 
-While searching resources for the YOLOv3, I found the \hyperlink{ref15}{public github repository [15]} that contains the source codes of the PyTorch Implementation of the YOLOv3 DarkNet and the pre-trained model, which is trained with the COCO dataset. So, I used that repository as a starting point of my project.
+As the main aim of this project is not implementing the YOLOv3, but using it for the video summarization system, I used \hyperlink{ref15}{the existing PyTorch implementation of the YOLOv3 [15]}. The default pretrained YOLO model is trained with the COCO dataset. COCO is a large-scale object detection, segmentation, and captioning dataset. It is most widely used dataset for the object detection projects, since it contains more than 330,000 images with 80 different types of objects. However, as the COCO dataset only contains 80 different types of objects, the YOLO model was not able to detect most foods and utensils in the cooking video.
 
 \subsubsection{Retraining the YOLOv3}
 
-Since the YOLOv3 model with the COCO dataset could only detect 80 different kinds of objects, the accuracy of the YOLOv3 model was much lower than expected. For example, the YOLOv3 gives the "toilet" label to the white doughnut. This is because the YOLOv3 is too generic and needs to be retrained with specific image datasets with foods. Thus, I had to retrain the YOLO model.
+As the YOLOv3 model with the COCO dataset could only detect 80 different kinds of objects, the accuracy of the YOLOv3 model for detecting food instances from cooking video was much lower than expected. For example, the YOLOv3 gives the "toilet" label to the white doughnut. This is because the YOLOv3 is too generic and needs to be retrained with specific image dataset with foods. Thus, I had to retrain the YOLO model.
 
-It is clear that the usual difficulty with the Deep Learning is the requirement of a large dataset. Instead of investing great labor to collect the required food images, I decided to retrain the YOLO with the \hyperlink{ref4}{Food100 dataset [4]}. This dataset contains 100 classes of food photos, where there are more than 100 images for each class. Each food photo has a bounding box indicating the location of the food item in the photo. Also, the dataset contains the label files for all classes, which contains the coordinates of the bounding boxes and the names of the object in each bounding box. Henceforth, it would be possible to say that the Food-100 is a perfect dataset to retrain the YOLO model to detect foods in the video.
+It is clear that the usual difficulty with the Deep Learning is the requirement of a large dataset. Instead of investing great labor to collect the required food images, I decided to retrain the YOLO with the \hyperlink{ref4}{Food100 dataset [4]} and \hyperlink{ref7}{Edinburgh Utensils dataset [7]}.
 
-To retrain the YOLO model, the DarkNet is required. You could download and install the DarkNet by following the instructions in the \hyperlink{ref5}{DarkNet website [5]}. After installing the DarkNet, we need to start preparing the YOLO training process. To get Darknet YOLO training to work, several things are required - 1) Object bounding box file for each image, 2) Class name file for all the category names, 3) Training dataset file for the list of training images, 4) Validating dataset file for the list of validating images, 5) Configuration file for YOLO neural network specification, and 6) Data location file for finding all the data information. Since the Food100 dataset provides the bounding box file and the class name files, all we need to do for the YOLO training are task 3), 4), 5) and 6).
+The Food100 dataset contains 100 classes of food photos, where there are more than 100 images for each class. Each food photo has a bounding box indicating the location of the food item in the photo. Also, the dataset contains the label files for all classes, which contains the coordinates of the bounding boxes and the names of the object in each bounding box. Henceforth, it would be possible to say that the Food-100 is a perfect dataset to retrain the YOLO model to detect foods in the video.
+
+The Edinburgh Utensils dataset contains 20 classes, where each class contains more than 20 images. This dataset only contains 897 images, which is not big enough. If the number of data is too small, it might be possible that the retrained model is not fitted well. To overcome this problem, I increased the number of images by doing the image augmentation (resize, flip and rotate images). Unlike Food100 dataset, Edinburgh Utensils dataset only contains the raw images of kitchens utensils. Thus, to use it for retraining YOLO, the images should be labelled with suitable format. To solve this issue, the \hyperlink{ref21}{YOLO annotation tool [21]} was used.
+
+To retrain the YOLO model, the DarkNet, which is the original implementation of the YOLO model, is required. You could download and install the DarkNet by following the instructions in the \hyperlink{ref5}{DarkNet website [5]}. After installing the DarkNet, we need to start preparing the YOLO training process. To get Darknet YOLO training to work, several things are required - 1) Object bounding box file for each image, 2) Class name file for all the category names, 3) Training dataset file for the list of training images, 4) Validating dataset file for the list of validating images, 5) Configuration file for YOLO neural network specification, and 6) Data location file for finding all the data information. Since the Food100 dataset provides the bounding box file and the class name files, all we need to do for the YOLO training are task 3), 4), 5) and 6).
 
 For the task 3) and 4), DarkNet requires the text files called "train.txt" and "test.txt", where "train.txt" file contains the list of file paths of the files that will be used for the training, and "test.txt" file contains the list of file paths that will be used for the testing. To generate these text files, I wrote a simple python script, which reads the label files that the Food100 dataset provides, and splits all Food100 class images into "train.txt" training image list and "test.txt" validating image list. When splitting the data into train and test set, the ratio of train set and test set is 8 : 2, which means that using 80\% of dataset as training dataset and using 20\% of dataset for testing.
 
-The configuration file contains the specification of the YOLOv3 neural network. Since the target dataset has been changed, the content of the configuration file also need to be changed. To use the retrained YOLO model, the new configuration file should be created. The contents of the new configuration file should be almost same with the contents of the original configuration file, as both of them are using the YOLOv3 model. However, the number of filters of some layers and the number of classes should be modified, since the number of classes of the Food-100 dataset is different with the coco dataset. According to the \hyperlink{ref2}{YOLOv3 paper[2]}, the number of filters is equal n is $$n = (a + b + 1) * 3$$, where a is the number of classes and b is the number of the coordinates. Since the value of the n in the default configuration file is 245 (245 = (80 + 4 + 1) * 3 = 85 * 3  (a = 80, b = 4)), the value of the n in the new configuration file should be 315 ((100 + 4 + 1) * 3 = 105 * 3 = 315). Thus, by editing the number of classes and filters from "classes=80" and "filters=245" to "classes=100" and "filters=315", it is possible to generate a new configuration file for the custom YOLOv3 model.
+The configuration file contains the specification of the YOLOv3 neural network. Since the target dataset has been changed, the content of the configuration file also need to be changed. To use the retrained YOLO model, the new configuration file should be created. The contents of the new configuration file should be almost same with the contents of the original configuration file, as both of them are using the YOLOv3 model. However, the number of filters of some layers and the number of classes should be modified, since the number of classes of the Food-100 dataset is different with the coco dataset. According to the \hyperlink{ref2}{YOLOv3 paper[2]}, the number of filters is equal n is $$n = (a + b + 1) * 3$$, where a is the number of classes and b is the number of the coordinates. Since the value of the n in the default configuration file is 245 (245 = (80 + 4 + 1) * 3 = 85 * 3  (a = 80, b = 4)), the value of the n in the new configuration file should be 315 ((100 + 4 + 1) * 3 = 105 * 3 = 315) for the Food100 dataset, and 75((20 + 4 + 1) * 3 = 25 * 3 = 75) for the Edinburgh Utensils dataset. Thus, by replacing the number of classes and filters with suitable numbers, a new configuration file for the custom dataset will be generated.
 
-Basically, the DarkNet does not know where the label files, text files ("train.txt" and "text.txt"), and class name file are located in. Thus, the data file, which tells the DarkNet the file paths of those files, should be created before running the DarkNet to retrain the YOLOv3 model with the custom data. All the things that should be done in this step are finding the image files, creating label file for each class, and splitting the set of images into train set and test set.
+To retrain the network, the programmer should let the Darknet know the file paths of the label files, because the DarkNet does not know where the label files, text files ("train.txt" and "text.txt"), and class name file are located in. Thus, the data file, which tells the DarkNet the file paths of those files, should be created before running the DarkNet to retrain the YOLOv3 model with the custom data. All the things that should be done in this step are finding the image files, creating label file for each class, and splitting the set of images into train set and test set.
 
-When training the neural network, programmers should worry about both under-fitting and over-fitting, since both could bring serious problems. To avoid the both, the DarkNet recommends to retrain the YOLO model by iterating 2,000 epochs for each class. Since the number of classes in the new dataset is 100, ideally, the retraining process should iterate 200,000 iterations.
+When training the neural network, both cases of under-fitting and over-fitting should be considered, as both of them could bring serious problems to the neural network. To avoid both overfitting and underfitting, the retraining process should iterate the suitable number of epochs. Basically, the DarkNet recommends retraining the YOLO model by iterating at least 500 epochs for each class. Thus, we will iterate 50,000 iterations for Food100 dataset, and 10,000 epochs for the Edinburgh Utensils dataset.
 
-When retraining the YOLOv3 model, the programmer could choose either YOLOv3 or YOLOv3-tiny to use. As the name depicts, the tiny model is a tiny YOLO model, which is much smaller than the general YOLO model. With the YOLO-tiny model, the retraining process could be finished sooner, however, the accuracy of the YOLO-tiny model is not as good as the general YOLO model. According to the \hyperlink{ref7}{DarkNet website [7]}, for the COCO dataset with the same number of iteration, the accuracy of the YOLOv3-tiny model is 31\%, where the accuracy of the YOLOv3 model is 51\%. As commonly known, the accuracy of the YOLO object detection system itself is not too high. Therefore, it is safe to assume that the accuracy of the tiny YOLOv3 model is not as good as expected. To understand the semantic of the video correctly, the accuracy of the object detection system should be not too bad. Henceforth, it is possible to say that the YOLOv3 model is more suitable for this project than the YOLOv3-tiny model.
+When retraining the YOLOv3 model, the programmer could choose either YOLOv3 or YOLOv3-tiny to use.As the name depicts, the tiny model is a tiny YOLO model, which is much smaller than the general YOLO model. With the YOLO-tiny model, the retraining process could be finished sooner, however, the accuracy of the YOLO-tiny model is not as good as the general YOLO model.
 
-By executing the command "./darknet detector train (\textit{data file path}) (\textit{config file path}) (\textit{weights file path})", the DarkNet program will execute the retraining process for the YOLOv3 model. For every 100 epochs, the DarkNet automatically stores the backup weight files in the backup directory, thus, even if the program terminates in the middle of the retraining process, it is able to restart the retraining process from the certain point.
+Similarly, the programmer could choose to retrain last N layers only, or retrain the model with fine tuning. The fine tuning is a retraning method that retrains half of the layers that the YOLO model contains. So, by retraining last 1 layer of the YOLO-tiny model, it would be possible to retrain the neural net extremely faster than fine tuning the YOLO model. However, then the accuracy of the retrained model will be definitely lower than the fine tuned YOLO model.
 
-Once the retraining process terminates, rename the latest backup weights file with the suitable name (i.e. food100.weights). By using the generated weights file and the corresponding name file and configuration file, now the object detection system could detect the food objects from the images.
+To understand the semantics of the video correctly, the accuracy of the object detection system should be good enough for finding the keyframes. As a result of the video summarization system strongly depends on the result of YOLOv3, it would be better to choose the accuracy rather than training speed. Henceforth, it is possible to say that retraining the YOLOv3 model with fine-tuning is more suitable for this project than retraining the YOLOv3-tiny model or retraining the last N layers only.
 
-The retrained model could detect food objects much better than the YOLOv3 model with COCO dataset. However, it turns out that the accuracy of the Food-100 YOLO model is not good for detecting the normal objects such as kitchen utensils. This is basically because that the dataset that is used for the retraining process only contains the food images. For instance, the retrained model gives the label "hamburger" to the fist. To overcome this issue, I designed the system to use both general YOLO model and retrained model, and merging the outputs of 2 models to enhance the accuracy of the object detection.
+By executing the command "./darknet detector train (\textit{data file path}) (\textit{config file path}) (\textit{weights file path})", the DarkNet program will start the retraining process for the YOLOv3 model. For every 100 epochs, the DarkNet automatically stores the backup weight files in the backup directory, thus, even if the program terminates in the middle of the retraining process, it would be possible to restart the retraining process from the certain point.
+
+Once the retraining process terminates, rename the latest backup weights file with the suitable name (i.e. food100\_final.weights). By using the generated weights file and the corresponding name file and configuration file, now the object detection system could detect the food objects from the images.
+
+After finishing the training processs, all models were evaluated by using the confusion matrix function of scikit-learn. And it was found that the accuracy of the model that is retrained with Edinburgh Utensils dataset is too low. Fortunately, the action detection system provides nouns, and the basic YOLO model covers several important utensils such as pot, pan, and knife. Thus, it was decided to replace the utensil model with the action detection system's noun detecting component and basic YOLO model. The result of the evaluation of retrained YOLO models will be explained in detail in the \hyperlink{evaluate_yolo_with_cm}{"Confusion Matrix of retrained YOLO models"} section.
 
 \subsubsection{Merging the sets of detected objects}
 
@@ -156,11 +164,7 @@ To overcome the issue mentioned above, the object detection system checks the co
 
 If confidence value of both general object and food object are higher than the 0.5, then the system will choose the general object. And if the confidence value of the general object is higher than 0.5, however, the food object's confidence value is less than 0.5, the system will choose the general object. Similarly, if the confidence value of the food object is higher than 0.5, however, the general object's confidence value is less than 0.5, then the system will choose the food object. If the confidence of both COCO object and food object are less than 0.5, then the system will ignore them.
 
-\subsubsection{Using wordnet to enhance the accuracy}
-
-TODO - wordnet, etc ??????
-
-\subsubsection{Skipping frames}
+\subsubsection{Selecting frames that are used for object detection}
 
 TODO - skip frames (read every n frames)
 
@@ -172,35 +176,76 @@ Again, to detect the action, a video dataset was required, whose size is huge en
 
 \subsubsection{Epic Kitchens}
 
-The \hyperlink{ref8}{"Epic Kitchens" [8]} is an open sourced dataset, which contains the videos with first-person vision. The videos in this dataset depict non-scripted daily activities. Basically, This dataset is  a large-scale egocentric video benchmark recorded by 32 participants in their native kitchen environments. All participants are asked to start recording every time they entered their kitchen until they finished using their kitchen. Also, for the annotation, they asked their participants to narrate their own videos, so that they could reflect true intention. According to their \hyperlink{ref12}{paper [12]}, they describe their object, action and anticipation challenges, and evaluate several baselines over two test splits, seen and unseen kitchens. Also, the \hyperlink{ref8}{"Epic Kitchens" [8]} provides the pre-trained models by using the PyTorch Hub, which will be mentioned in the \hyperlink{actionDetection_used}{"Technologies Used"} section.
+The \hyperlink{ref8}{"Epic Kitchens" [8]} is an open sourced dataset, which contains the videos with first-person vision. The videos in this dataset depict non-scripted daily activities. Basically, this dataset is  a large-scale egocentric video benchmark recorded by 32 participants in their native kitchen environments. All participants are asked to start recording every time they entered their kitchen until they finished using their kitchen. Also, for the annotation, they asked their participants to narrate their own videos, so that they could reflect true intention. According to their \hyperlink{ref12}{paper [12]}, they describe their object, action and anticipation challenges, and evaluate several baselines over two test splits, seen and unseen kitchens. Also, the \hyperlink{ref8}{"Epic Kitchens" [8]} provides the pre-trained models by using the PyTorch Hub, which will be discussed in the \hyperlink{actionDetection_used}{"Technologies Used"} section.
 
-The Epic Kitchens provides a set of pre-trained models where each of those models uses different action detection algorithm. The provided models are \hyperlink{ref16}{TSN (Temporal Segment Networks) [16]}, \hyperlink{ref13}{TRN (Temporal Relational Reasoning) [13]}, and \hyperlink{ref17}{TSM (Temporal Shift Module) [17]}.
+The Epic Kitchens provides a set of pre-trained models where each of those models uses different action detection algorithm. The provided models are \hyperlink{ref16}{TSN (Temporal Segment Networks) [16]}, \hyperlink{ref13}{TRN (Temporal Relational Reasoning) [13]}, and \hyperlink{ref17}{TSM (Temporal Shift Module) [17]} based networks, including a variety of their variants.
 
-TODO - explain what each TRN, TSM and TSM are ????
+\hyperlink{ref16}{Temporal Segment Networks [16]} is a model that propagates each snippet through a 2D CNN backbone and aggregate the class scores across segments through average or max pooling. As a consequence, TSN is unable to learn temporal correlations across segments. TSN is typically trained on RGB and optical flow modalities and combined by late-fusion.
 
-By passing multiple frames, the pretrained models will detect the action in those frames, and convert the array of frames to the features. When extracting the features, the pretrained models will return 2 types of features - one for the verbs and one for the nouns. The the each extracted feature could be converted to the corresponding logits. By using the Softmax function as an activation function, the action detection system will calculate the mean of the given logits. The result of the calculation will be a list that contains the indexes and probabilities of labels. Since the action detecting models returned 2 logits, 1 for verbs and the other for nouns, the system could calculate lists of indexes and probability values for nouns and verbs.
+Similarly, \hyperlink{ref13}{Temporal Relational Reasoning [13]} propagate snippets through a 2D CNN, like in TSN, up to the preclassification layer. These produce features rather than class confidence scores. In order to support inter-segment temporal modelling, these segment-level features are then processed by a modified relational module [8] sensitive to item ordering. Two variants of the TRN module exists: a single scale version which computes a single n-segment relation, and a multi-scale (M-TRN) variant which computes relations over ordered sets of segment features of size 2 to n. Once the relational features have been computed, they are summed and fed to a classification layer.
+
+\hyperlink{ref17}{J. Lin et al. [17]} stated that "TSM based networks functionally operate just like TSN, snippets are sampled per segment, propagated through the backbone, and then averaged". However, unlike TSN, the backbone is modified to support reasoning across segments by shifting a proportion of the filter responses across the temporal dimension. This opens the possibility for subsequent convolutional layers to learn temporal correlations.
+
+By passing multiple frames, the pretrained models will detect the action in those frames, and convert the array of frames to the features. When extracting the features, the pretrained models will return 2 types of features - one for the verbs and one for the nouns. The the each extracted feature could be converted to the corresponding logits. By using the Softmax function as an activation function, the action detection system will calculate the mean of the given logits. The result of the calculation will be a list that contains the indexes and probabilities of labels. Since the action detecting models returned 2 logits (1 for verbs and the other for nouns) the system could calculate and return lists of indexes and probability values for nouns and verbs.
 
 \subsubsection{Top K nouns and verbs}
 
-Each of 3 action detection models will return 2 lists, thus, now the system has total 6 lists - 3 lists for verbs and 3 lists for nouns. Epic-Kitchens trained models with 126 verbs and 351 nouns. However, the video summarization system only needs 1 verb and Top K nouns. Thus, the system should be able to choose the best verb and Top K nouns.
+Each of 3 action detection models will return 4 lists (probability values of nouns, probability values of verbs, indexes of verbs, and indexes of nouns), thus, now the system has total 12 lists. All 3 of these models are trained with 126 verbs and 351 nouns. However, since the main of this action detection system is to detect the motion and return suitable verbs and nouns that depicts the detected action, the video summarization system only requires 1 verb and 1 noun. Henceforth, the action detection subsystem should be able to choose the best verb and the best noun.
 
-TODO - choosing Top K nouns and verbs
+According to \hyperlink{ref8}{D. Damen et al. [8]}, the accuracy of noun prediction is lower than the verb prediction, however, it is possible to increase the accuracy of noun prediction by using Top 5 nouns rather than using the best noun. Henceforth, rather than using 1 noun, the action detection system uses Top 5 nouns for single action. So, each action detection model will return 1 verb and 5 nouns for every iteration.
 
 \subsubsection{Merging outputs from each action detection models}
 
-TODO - using wordnet to make the system accurate + merging all chosen nouns and verbs
+Since 3 action models return 1 verb and 5 nouns for every second of video, the action detection system will get 3 verbs and 15 nouns for every iteration. To merge these results, the wordnet is used.
+
+TODO - wordnet ????
+
+\subsubsection{Action detection with OpenCV and scikit-video}
+
+TODO - opencv VideoCapture issue  =>  implement 2 versions
 
 \subsection{Merging the sub-systems}
 
-\subsubsection{Merging sub-systems}
+After detecting actions and objects from the target video, the video summarization system should merge the results of action detection and object detection. Then, the system should compress the result to summarize the video.
+
+\subsubsection{Filtering the most inrelevant words}
 
 TODO - wordnet, etc (maybe using pipeline for merging the subsystems?)
+TODO - calculate threshold (max / 2) -> use the threshold value to filter words
+
+\subsubsection{Compression of the results}
 
 \section{Results and Discussion}
 
+\subsection{Comparison with DOER}
+
 \subsection{Evaluation}
 
-\subsection{Comparison with DOER}
+\subsubsection{Confusion Matrix of retrained YOLO models}
+
+\hypertarget{evaluate_yolo_with_cm}{A confusion matrix} is a table that is often used to describe the performance of a classification model on a set of test data for which the true values are known. It allows the visualization of the performance of an algorithm. To evaluate the accuracy of retrained YOLO models, the confusion matrix is used.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{imgs/cm_food100.png}
+    \caption{Confusion Matrix of YOLO model with Food100 dataset}
+    \label{fig:cm_food100}
+\end{figure}
+
+The image above shows the confusion matrix of the YOLO model that is retrained with the Food100 dataset. As the confusion matrix shows, the YOLO model is well trained.
+
+Unlike the food YOLO model, the YOLO model that is retrained with the Edinburgh Utensils dataset did not trained well. Below is the confusion matrix of the YOLO model that is retrained the Edinburgh Utensils dataset.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.4]{imgs/cm_utensils.png}
+    \caption{Confusion Matrix of YOLO model with Edinburgh Utensils dataset}
+    \label{fig:cm_food100}
+\end{figure}
+
+As you could see in the image above, the predicted values are biased for some reason. Perhaps, this is because that the only the last 4 layers were retrained rather than retraining the model with the fine-tuning. The retraining process with the Food100 dataset took much more time than expected. Due to the time limit, it was decided to retrain the utensil model by retraining only last N layers.
+
+Fortunately, the original YOLO model covers some kitchen utensils, and the action detection system detects the noun for the action. Henceforth, rather than keep retraining the YOLO model until it works properly, it was decided that combining the result of general YOLO model and the nouns that are detected by the action detection system.
 
 \subsection{Future Work and Improvements}
 
@@ -221,7 +266,7 @@ TODO - wordnet, etc (maybe using pipeline for merging the subsystems?)
 \newline
 \hypertarget{ref6}{[6]} M. Otani, Y. Nakashima, E. Rahtu, J. Heikkila, "Rethinking the Evaluation of Video Summaries", 2019. [online]. Available :  \url{https://arxiv.org/abs/1903.11328}
 \newline
-\hypertarget{ref7}{[7]}  J. Redmon, A. Farhadi, "DarkNet YOLO", 2015. [online]. Available :  \url{https://pjreddie.com/darknet/yolo/}
+\hypertarget{ref7}{[7]} R. Fisher, "Edinburgh Utensils dataset", 2013. [online]. Available :  \url{http://homepages.inf.ed.ac.uk/rbf/UTENSILS/}
 \newline
 \hypertarget{ref8}{[8]}  D. Damen, S. Fidler, G. M. Farinella, D. Moltisanti, M. Wray, H. Doughty, T. Perrett, W. Price, E. Kazakos, J. Munro, A. Furnari, "Epic Kitchens", 2019. [online]. Available :  \url{https://epic-kitchens.github.io/2019}
 \newline
@@ -242,9 +287,14 @@ TODO - wordnet, etc (maybe using pipeline for merging the subsystems?)
 \hypertarget{ref16}{[16]} L. Wang, Y. Xiong, Z. Wang, Y. Qiao, D. Lin, X. Tang, L. V. Gool, "Temporal Segment Networks for Action Recognition in Videos", [online]. Available :  \url{https://arxiv.org/abs/1705.02953}
 \newline
 \hypertarget{ref17}{[17]} J. Lin, C. Gan, S. Han, "TSM: Temporal Shift Module for Efficient Video Understanding", [online]. Available :  \url{https://arxiv.org/abs/1811.08383}
+\newline
 \hypertarget{ref18}{[18]} O. Utsumi, K. Miura, I. Ide, S. Sakai, H. Tanaka, "An object detection method for describing soccer games from video", [online]. Available :  \url{https://ieeexplore.ieee.org/abstract/document/1035714}
+\newline
 \hypertarget{ref19}{[19]} X. Yu, C. Xu, Q. Tian, H. w. Leong, "A ball tracking framework for broadcast soccer video", 2003. [online]. Available :  \url{https://www.researchgate.net/publication/4028111_A_ball_tracking_framework_for_broadcast_soccer_video}
+\newline
 \hypertarget{ref20}{[20]} P. Jodoin, Y. Benezeth, Y. Wang, "Meta-tracking for video scene understanding", 2013. [online]. Available :  \url{https://ieeexplore.ieee.org/abstract/document/6636607}
+\newline
+\hypertarget{ref21}{[21]} M. Murugavel, "YOLO-Annotation-Tool", 2013. [online]. Available :  \url{https://github.com/ManivannanMurugavel/YOLO-Annotation-Tool}
 \newline
 
 \newpage
@@ -262,5 +312,7 @@ TODO - pytorch, opencv, etc
 \subsubsection{Action Detection Model}
 
 \hypertarget{actionDetection_used}{The PyTorch Hub} is a simple API and workflow the provides the basic building blocks for improving machine learning research reproducibility. The PyTorch Hub consists of a pre-trained model repository designed specifically to facilitate research reproducibility.  Therefore, by using the PyTorch Hub, researchers in various fields could easily discover each other’s research, leverage it as a baseline and build new cutting edge research from there. By using the PyTorch Hub, the system will download the pretrained action detection models.
+
+TODO - skvideo
 
 \end{document}

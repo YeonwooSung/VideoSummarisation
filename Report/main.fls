@@ -94,6 +94,12 @@ INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmbx10.tfm
 OUTPUT /Users/CY/Desktop/VideoSumGAN/Report/main.toc
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmti10.tfm
+INPUT /Users/CY/Desktop/VideoSumGAN/Report/imgs/cm_food100.png
+INPUT /Users/CY/Desktop/VideoSumGAN/Report/imgs/cm_food100.png
+INPUT /Users/CY/Desktop/VideoSumGAN/Report/imgs/cm_food100.png
+INPUT /Users/CY/Desktop/VideoSumGAN/Report/imgs/cm_utensils.png
+INPUT /Users/CY/Desktop/VideoSumGAN/Report/imgs/cm_utensils.png
+INPUT /Users/CY/Desktop/VideoSumGAN/Report/imgs/cm_utensils.png
 INPUT /usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmtt10.tfm
 INPUT /Users/CY/Desktop/VideoSumGAN/Report/main.aux
 INPUT /Users/CY/Desktop/VideoSumGAN/Report/main.out

@@ -4,7 +4,7 @@
 \contentsline {subsection}{\numberline {1.1}Motivation}{5}{subsection.1.1}
 \contentsline {section}{\numberline {2}Related Works}{6}{section.2}
 \contentsline {subsection}{\numberline {2.1}Object detection for video summarization}{6}{subsection.2.1}
-\contentsline {subsection}{\numberline {2.2}Motion detection to understand video}{7}{subsection.2.2}
+\contentsline {subsection}{\numberline {2.2}Understanding video by detecting human motions}{7}{subsection.2.2}
 \contentsline {subsection}{\numberline {2.3}Using procedural steps for summarization}{7}{subsection.2.3}
 \contentsline {section}{\numberline {3}Design and Implementation}{7}{section.3}
 \contentsline {subsection}{\numberline {3.1}Mid-Project Changes}{8}{subsection.3.1}
@@ -13,22 +13,24 @@
 \contentsline {subsubsection}{\numberline {3.3.1}Object Detection - YOLOv3}{9}{subsubsection.3.3.1}
 \contentsline {subsubsection}{\numberline {3.3.2}Retraining the YOLOv3}{10}{subsubsection.3.3.2}
 \contentsline {subsubsection}{\numberline {3.3.3}Merging the sets of detected objects}{12}{subsubsection.3.3.3}
-\contentsline {subsubsection}{\numberline {3.3.4}Using wordnet to enhance the accuracy}{13}{subsubsection.3.3.4}
-\contentsline {subsubsection}{\numberline {3.3.5}Skipping frames}{13}{subsubsection.3.3.5}
-\contentsline {subsection}{\numberline {3.4}Action Detection}{13}{subsection.3.4}
-\contentsline {subsubsection}{\numberline {3.4.1}Epic Kitchens}{13}{subsubsection.3.4.1}
-\contentsline {subsubsection}{\numberline {3.4.2}Top K nouns and verbs}{14}{subsubsection.3.4.2}
-\contentsline {subsubsection}{\numberline {3.4.3}Merging outputs from each action detection models}{14}{subsubsection.3.4.3}
-\contentsline {subsection}{\numberline {3.5}Merging the sub-systems}{14}{subsection.3.5}
-\contentsline {subsubsection}{\numberline {3.5.1}Merging sub-systems}{14}{subsubsection.3.5.1}
-\contentsline {section}{\numberline {4}Results and Discussion}{15}{section.4}
-\contentsline {subsection}{\numberline {4.1}Evaluation}{15}{subsection.4.1}
-\contentsline {subsection}{\numberline {4.2}Comparison with DOER}{15}{subsection.4.2}
-\contentsline {subsection}{\numberline {4.3}Future Work and Improvements}{15}{subsection.4.3}
-\contentsline {section}{\numberline {5}Conclusion}{15}{section.5}
-\contentsline {section}{\numberline {6}References}{16}{section.6}
-\contentsline {section}{\numberline {7}Appendix}{18}{section.7}
-\contentsline {subsection}{\numberline {7.1}Instructions}{18}{subsection.7.1}
-\contentsline {subsection}{\numberline {7.2}Technologies Used}{18}{subsection.7.2}
-\contentsline {subsubsection}{\numberline {7.2.1}YOLOv3}{18}{subsubsection.7.2.1}
-\contentsline {subsubsection}{\numberline {7.2.2}Action Detection Model}{18}{subsubsection.7.2.2}
+\contentsline {subsubsection}{\numberline {3.3.4}Selecting frames that are used for object detection}{14}{subsubsection.3.3.4}
+\contentsline {subsection}{\numberline {3.4}Action Detection}{14}{subsection.3.4}
+\contentsline {subsubsection}{\numberline {3.4.1}Epic Kitchens}{14}{subsubsection.3.4.1}
+\contentsline {subsubsection}{\numberline {3.4.2}Top K nouns and verbs}{15}{subsubsection.3.4.2}
+\contentsline {subsubsection}{\numberline {3.4.3}Merging outputs from each action detection models}{15}{subsubsection.3.4.3}
+\contentsline {subsubsection}{\numberline {3.4.4}Action detection with OpenCV and scikit-video}{16}{subsubsection.3.4.4}
+\contentsline {subsection}{\numberline {3.5}Merging the sub-systems}{16}{subsection.3.5}
+\contentsline {subsubsection}{\numberline {3.5.1}Filtering the most inrelevant words}{16}{subsubsection.3.5.1}
+\contentsline {subsubsection}{\numberline {3.5.2}Compression of the results}{16}{subsubsection.3.5.2}
+\contentsline {section}{\numberline {4}Results and Discussion}{16}{section.4}
+\contentsline {subsection}{\numberline {4.1}Comparison with DOER}{16}{subsection.4.1}
+\contentsline {subsection}{\numberline {4.2}Evaluation}{16}{subsection.4.2}
+\contentsline {subsubsection}{\numberline {4.2.1}Confusion Matrix of retrained YOLO models}{16}{subsubsection.4.2.1}
+\contentsline {subsection}{\numberline {4.3}Future Work and Improvements}{18}{subsection.4.3}
+\contentsline {section}{\numberline {5}Conclusion}{18}{section.5}
+\contentsline {section}{\numberline {6}References}{19}{section.6}
+\contentsline {section}{\numberline {7}Appendix}{21}{section.7}
+\contentsline {subsection}{\numberline {7.1}Instructions}{21}{subsection.7.1}
+\contentsline {subsection}{\numberline {7.2}Technologies Used}{21}{subsection.7.2}
+\contentsline {subsubsection}{\numberline {7.2.1}YOLOv3}{21}{subsubsection.7.2.1}
+\contentsline {subsubsection}{\numberline {7.2.2}Action Detection Model}{21}{subsubsection.7.2.2}
