@@ -23,6 +23,9 @@ def arg_parse():
 
 
 def validateWord(word):
+    """
+    Validate the word by checking if the given word contains unexpected character.
+    """
     if ':' in word:
         return word.split(':')[0].strip()
     elif '-' in word:
@@ -70,6 +73,12 @@ def calculateSimilarity(w1, w2):
 
 def compareAndCalculateSimilarityList(comb_list):
     """
+    Compare the words in the given combination list.
+    Then, calculate the sum of similarity values for each word.
+    Calcualted sum of similarity values will be appended to the result list.
+
+    :param comb_list: Combination list that contains lists of words.
+    :return resultList: A list that contains the sum of similarity values
     """
     result = []
     syns_res = {}
@@ -100,6 +109,16 @@ def compareAndCalculateSimilarityList(comb_list):
 
 
 def readActionDetectionResult(f, exec_mode):
+    """
+    Read lines from the result file of the action detection system.
+
+    :param f: File stream object
+    :param exec_mode: The exection mode - either normal or debug
+
+    :return info_line: The information line
+    :return v: The verb
+    :return n: A list of nouns
+    """
     info_line = f.readline().strip()
     v_line = f.readline().strip()
     n_line = f.readline().strip()
@@ -123,6 +142,13 @@ def readActionDetectionResult(f, exec_mode):
     return info_line, v, n
 
 def readObjectDetectionResult(f, exec_mode):
+    """
+    Read lines from the result file of the object detection system.
+
+    :param f: File stream object
+    :param exec_mode: The exection mode - either normal or debug
+    :return objList: A list of objects
+    """
     obj = None
     objList= []
     objects = set()
@@ -162,11 +188,27 @@ def readObjectDetectionResult(f, exec_mode):
 
 
 def getAllCombinationsOf2Lists(list1, list2):
+    """
+    Generate a list of all combinations of all elements in 2 lists.
+
+    :param list1: The first list
+    :param list2: The second list
+    :return: A list of all combinations of all elements in 2 lists.
+    """
     all_combinations = [[i, j] for i in list1 for j in list2]
     return all_combinations
 
 
 def filterWordsByThreshold(tuple_list, exec_mode):
+    """
+    Calculate the threshold value, and filter the inrelevant words by comparing the similarity
+    values with the threshold value.
+
+    :param tuple_list: A list of tuple, where each tuple contains the word and similarity value of that word
+    :param exec_mode: The exection mode - either normal or debug
+
+    :return w_list: A filtered word list.
+    """
     max_sim = 0
     max_w = None
     w_list = []
@@ -206,6 +248,22 @@ def filterWordsByThreshold(tuple_list, exec_mode):
 
 
 def checkFrameRangeForSimilarityCalculation(f, start_frame, end_frame, objList, v, noun_list, index, results, exec_mode):
+    """
+    Merges the results of action detection system and object detection system.
+    When merging results, this function removes the most inrelevant words by comparing similarity values.
+
+    :param f: The file stream instance
+    :param start_frame: The start frame number
+    :param end_frame: The end frame number
+    :param objList: A list of objects
+    :param v: The current verb
+    :param noun_list: The current noun list
+    :param index: A number that helps the program to know the index of current iteration
+    :param results: A list of results (each result contains verb, noun, frame_num, and object)
+    :param exec_mode: The exection mode - either normal or debug
+
+    :return index: Updated index
+    """
     n_list = noun_list
     v_list = [v]
 
@@ -288,6 +346,16 @@ def checkFrameRangeForSimilarityCalculation(f, start_frame, end_frame, objList, 
 
 
 def compareObjectLists(objects1, objects2, threshold_n=0.4):
+    """
+    Compare the object lists to detect the change point by comparing the size of intersection set
+    with the calculated threshold value.
+
+    :param objects1: The first object list
+    :param objects2: The second object list
+    :param threshold_n: The value that is used for calculating threshold value
+
+    :return: Returns True if it finds the change point. Otherwise, returns False.
+    """
     if len(objects1) != len(objects2) and (objects1 == [] or objects2 == []):
         return True
 
@@ -301,7 +369,7 @@ def compareObjectLists(objects1, objects2, threshold_n=0.4):
             if obj1 == obj2:
                 total += 1
 
-    # compare the size of intersection with the threshold value
+    # compare the size of intersection set with the threshold value
     if threshold <= total:
         return False
     else:
@@ -309,6 +377,15 @@ def compareObjectLists(objects1, objects2, threshold_n=0.4):
 
 
 def compareNounLists(n_list1, n_list2):
+    """
+    Compare noun lists to find the change point.
+    If the size of intersection set is 0 (no intersection), then returns True.
+    Otherwise, returns False.
+
+    :param n_list1: The first noun list
+    :param n_list2: The second noun list
+    :return: Either True or False
+    """
     if n_list1 == []:
         return True
     if n_list2 == []:
@@ -348,6 +425,7 @@ if __name__ == '__main__':
     f = open('output/merge_result.txt', 'w+')
     results = []
 
+    # use endless loop which will loop until the file stream gets the EOF of the result file
     while True:
         info_line, v, n = readActionDetectionResult(f_act, exec_mode)
 
@@ -405,7 +483,7 @@ if __name__ == '__main__':
             prev_objects = objects
 
 
-        # check if noun_list chagned (or objects)
+        # check if noun_list chagned
         elif compareNounLists(prev_n, n_list) and use_n:
             # check if it is debugging mode - if so, print out debugging message
             if exec_mode == 'debug':
@@ -420,6 +498,7 @@ if __name__ == '__main__':
             prev_objects = objects
 
 
+        # check if objects chagned
         elif compareObjectLists(prev_objects, objects) and use_obj:
             # check if it is debugging mode - if so, print out debugging message
             if exec_mode == 'debug':
