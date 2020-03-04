@@ -1,7 +1,7 @@
 from __future__ import division
 import argparse
 from itertools import product
-import nltk
+import math
 from nltk.corpus import wordnet as wn
 
 
@@ -13,10 +13,11 @@ def arg_parse():
     """
     parser = argparse.ArgumentParser(description='Choose objects for the Video Summarisation system')
 
-    #TODO parser.add_argument('', dest='', help='', default='', type=str)
     parser.add_argument("--obj_result", dest="obj_result", help="file path of result file of the object detection system", default='./output/testOutput.txt', type=str)
     parser.add_argument('--action_result', dest='action_result', help='file path of result file of the action detection system', default='./output/actionDetection_output.txt', type=str)
-    parser.add_argument('--mode', dest='mode', help='', choices=['debug', 'normal'], default='normal', type=str)
+    parser.add_argument('--mode', dest='mode', help='Execution mode - either debug or normal', choices=['debug', 'normal'], default='normal', type=str)
+    parser.add_argument('--use_n', dest='use_n', help='y for using nouns, n for not using nouns', choices=['y', 'n'], default='n', type=str)
+    parser.add_argument('--use_obj', dest='use_obj', help='y for using objects, n for not using objects', choices=['y', 'n'], default='n', type=str)
 
     return parser.parse_args()
 
@@ -286,6 +287,48 @@ def checkFrameRangeForSimilarityCalculation(f, start_frame, end_frame, objList, 
     return index
 
 
+def compareObjectLists(objects1, objects2, threshold_n=0.4):
+    if len(objects1) != len(objects2) and (objects1 == [] or objects2 == []):
+        return True
+
+    # threshold value to detect change point by comparing lists of objects
+    threshold = math.ceil(threshold_n * len(objects1))
+    total = 0
+
+    # use nested for loops to compare objects in the object lists
+    for obj1 in objects1:
+        for obj2 in objects2:
+            if obj1 == obj2:
+                total += 1
+
+    # compare the size of intersection with the threshold value
+    if threshold <= total:
+        return False
+    else:
+        return True
+
+
+def compareNounLists(n_list1, n_list2):
+    if n_list1 == []:
+        return True
+    if n_list2 == []:
+        return False
+
+    hasIdentical = True
+
+    # use nested for loops to compare all nouns in n_list1 and n_list2
+    for n1 in n_list1:
+        hasIdentical1 = False
+        for n2 in n_list2:
+            if n1 == n2:
+                hasIdentical1 = True
+        hasIdentical = hasIdentical or hasIdentical1
+
+    # hasIdentical = True  -> There is at least one intersection between n_list1 and n_list2
+    # hasIdentical = False -> There is no intersection between n_list1 and n_list2
+    return not hasIdentical
+
+
 if __name__ == '__main__':
     args = arg_parse()  # generate argument parser
 
@@ -333,6 +376,12 @@ if __name__ == '__main__':
     f = open('output/compress_result.txt', 'w+')
     prev_v = ''
     prev_n = []
+    prev_objects = []
+
+    # argparse arguments
+    use_n = True if args.use_n == 'y' else False
+    use_obj = True if args.use_obj == 'y' else False
+
 
     # iterate the list of results of merging process, and find the change points (key frames)
     for res in results:
@@ -343,14 +392,46 @@ if __name__ == '__main__':
 
         # check if the verb has been changed to detect the change point
         if prev_v != v:
+            # check if it is debugging mode - if so, print out debugging message
             if exec_mode == 'debug':
                 print('[DEBUG] change point detected - prev_v={}, v={}'.format(prev_v, v))
-            #TODO change point!!
+
+            # write result text
             f.write('{} -> prev_v={}, new_v={}\n'.format(frame_num, prev_v, v))
 
+            # update the values of variables
             prev_v = v
             prev_n = n_list
+            prev_objects = objects
 
-        #TODO elif noun_list chagned (or objects)
-    
+
+        # check if noun_list chagned (or objects)
+        elif compareNounLists(prev_n, n_list) and use_n:
+            # check if it is debugging mode - if so, print out debugging message
+            if exec_mode == 'debug':
+                print('[DEBUG] noun list changed\n\tprev_n={}\n\tn_list={}'.format(prev_n, n_list))
+
+            # write result text
+            f.write('{} -> prev_n={}, new_n={}\n'.format(frame_num, prev_n, n_list))
+
+            # update the values of variables
+            prev_v = v
+            prev_n = n_list
+            prev_objects = objects
+
+
+        elif compareObjectLists(prev_objects, objects) and use_obj:
+            # check if it is debugging mode - if so, print out debugging message
+            if exec_mode == 'debug':
+                print('[DEBUG] noun list changed\n\tprev_obj={}\n\tobjects={}'.format(prev_objects, objects))
+
+            # write result text
+            f.write('{} -> prev_objects={}, new_objects={}\n'.format(frame_num, prev_objects, objects))
+
+            # update the values of variables
+            prev_v = v
+            prev_n = n_list
+            prev_objects = objects
+
+    # close the file stream
     f.close()
