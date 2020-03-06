@@ -3,6 +3,8 @@ import argparse
 from itertools import product
 import math
 from nltk.corpus import wordnet as wn
+import skvideo.io
+import skvideo.utils
 
 
 def arg_parse():
@@ -406,10 +408,88 @@ def compareNounLists(n_list1, n_list2):
     return not hasIdentical
 
 
-if __name__ == '__main__':
-    args = arg_parse()  # generate argument parser
+def compressOutputs(results, use_n, use_obj, exec_mode):
+    # open file stream object for compression
+    f = open('output/compress_result.txt', 'w+')
 
-    exec_mode = args.mode  # get the execution mode (either normal or debug)
+    prev_v = ''
+    prev_n = []
+    prev_objects = []
+
+    frames = []
+
+    # iterate the list of results of merging process, and find the change points (key frames)
+    for res in results:
+        v = res['v']
+        n_list = res['n']
+        objects = res['obj']
+        frame_num = res['frame_num']
+
+        # check if the verb has been changed to detect the change point
+        if prev_v != v:
+            # check if it is debugging mode - if so, print out debugging message
+            if exec_mode == 'debug':
+                print(
+                    '[DEBUG] change point detected - prev_v={}, v={}'.format(prev_v, v))
+
+            # write result text
+            f.write('{} -> prev_v={}, new_v={}\n'.format(frame_num, prev_v, v))
+            # store the frame_num
+            frames.append(frame_num)
+
+            # update the values of variables
+            prev_v = v
+            prev_n = n_list
+            prev_objects = objects
+
+
+        # check if noun_list chagned
+        elif compareNounLists(prev_n, n_list) and use_n:
+            # check if it is debugging mode - if so, print out debugging message
+            if exec_mode == 'debug':
+                print('[DEBUG] noun list changed\n\tprev_n={}\n\tn_list={}'.format(prev_n, n_list))
+
+            # write result text
+            f.write('{} -> prev_n={}, new_n={}\n'.format(frame_num, prev_n, n_list))
+            # store the frame_num
+            frames.append(frame_num)
+
+            # update the values of variables
+            prev_v = v
+            prev_n = n_list
+            prev_objects = objects
+
+
+        # check if objects chagned
+        elif compareObjectLists(prev_objects, objects) and use_obj:
+            # check if it is debugging mode - if so, print out debugging message
+            if exec_mode == 'debug':
+                print('[DEBUG] noun list changed\n\tprev_obj={}\n\tobjects={}'.format(prev_objects, objects))
+
+            # write result text
+            f.write('{} -> prev_objects={}, new_objects={}\n'.format(frame_num, prev_objects, objects))
+            # store the frame_num
+            frames.append(frame_num)
+
+            # update the values of variables
+            prev_v = v
+            prev_n = n_list
+            prev_objects = objects
+
+    # close the file stream
+    f.close()
+
+    return frames
+
+
+
+
+
+if __name__ == '__main__':
+    # generate argument parser
+    args = arg_parse()
+    # get the execution mode (either normal or debug)
+    exec_mode = args.mode
 
     # file path of result files
     obj_output_file_path = args.obj_result
@@ -450,67 +530,11 @@ if __name__ == '__main__':
     f_act.close()
     f.close()
 
-    # open file stream object for compression
-    f = open('output/compress_result.txt', 'w+')
-    prev_v = ''
-    prev_n = []
-    prev_objects = []
-
     # argparse arguments
     use_n = True if args.use_n == 'y' else False
     use_obj = True if args.use_obj == 'y' else False
 
+    # Compression
+    frames = compressOutputs(results, use_n, use_obj, exec_mode)
 
-    # iterate the list of results of merging process, and find the change points (key frames)
-    for res in results:
-        v = res['v']
-        n_list = res['n']
-        objects = res['obj']
-        frame_num = res['frame_num']
-
-        # check if the verb has been changed to detect the change point
-        if prev_v != v:
-            # check if it is debugging mode - if so, print out debugging message
-            if exec_mode == 'debug':
-                print('[DEBUG] change point detected - prev_v={}, v={}'.format(prev_v, v))
-
-            # write result text
-            f.write('{} -> prev_v={}, new_v={}\n'.format(frame_num, prev_v, v))
-
-            # update the values of variables
-            prev_v = v
-            prev_n = n_list
-            prev_objects = objects
-
-
-        # check if noun_list chagned
-        elif compareNounLists(prev_n, n_list) and use_n:
-            # check if it is debugging mode - if so, print out debugging message
-            if exec_mode == 'debug':
-                print('[DEBUG] noun list changed\n\tprev_n={}\n\tn_list={}'.format(prev_n, n_list))
-
-            # write result text
-            f.write('{} -> prev_n={}, new_n={}\n'.format(frame_num, prev_n, n_list))
-
-            # update the values of variables
-            prev_v = v
-            prev_n = n_list
-            prev_objects = objects
-
-
-        # check if objects chagned
-        elif compareObjectLists(prev_objects, objects) and use_obj:
-            # check if it is debugging mode - if so, print out debugging message
-            if exec_mode == 'debug':
-                print('[DEBUG] noun list changed\n\tprev_obj={}\n\tobjects={}'.format(prev_objects, objects))
-
-            # write result text
-            f.write('{} -> prev_objects={}, new_objects={}\n'.format(frame_num, prev_objects, objects))
-
-            # update the values of variables
-            prev_v = v
-            prev_n = n_list
-            prev_objects = objects
-
-    # close the file stream
-    f.close()
+    #TODO
