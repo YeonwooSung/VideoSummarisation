@@ -2,6 +2,8 @@ from __future__ import division
 import argparse
 from itertools import product
 import math
+import os
+import cv2
 from nltk.corpus import wordnet as wn
 import skvideo.io
 import skvideo.utils
@@ -482,19 +484,7 @@ def compressOutputs(results, use_n, use_obj, exec_mode):
     return frames
 
 
-
-
-
-if __name__ == '__main__':
-    # generate argument parser
-    args = arg_parse()
-    # get the execution mode (either normal or debug)
-    exec_mode = args.mode
-
-    # file path of result files
-    obj_output_file_path = args.obj_result
-    action_output_file_path = args.action_result
-
+def mergeResults(obj_output_file_path, action_output_file_path, exec_mode):
     f_obj = open(obj_output_file_path, 'r')     # file stream to read the result file of the object detection
     f_act = open(action_output_file_path, 'r')  # file stream to read the result file of the action detection
 
@@ -530,6 +520,92 @@ if __name__ == '__main__':
     f_act.close()
     f.close()
 
+    return results
+
+
+def generateOutput(frames, video_name, output_video_name, exec_mode):
+    # check if the video file exists
+    if (not os.path.exists(video_name)) or (not os.path.isfile(video_name)):
+        print('[Error] File not exist "{}"'.format(video_name))
+        exit(1)
+
+    videodata = skvideo.io.vread(video_name)
+    vid = skvideo.utils.vshape(videodata)
+    print('[DEBUG] video_format={}'.format(vid.shape))
+
+    #TODO
+    cap = cv2.VideoCapture(video_name)
+    fps = 8
+
+    # Find OpenCV version
+    (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+    # get the fps of the target video
+    if int(major_ver) < 3:
+        fps = math.ceil(cap.get(cv2.cv.CV_CAP_PROP_FPS))
+        print("Frames per second using video.get(cv2.cv.CV_CAP_PROP_FPS): {0}".format(fps))
+    else:
+        fps = math.ceil(cap.get(cv2.CAP_PROP_FPS))
+        print("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
+
+    frame_width = int(cap.get(3))
+    frame_height = int(cap.get(4))
+
+    vWriter = cv2.VideoWriter(output_video_name, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), fps, (frame_width, frame_height))
+
+    # initialise variables
+    frame_num = 0
+    end_num = fps
+    f_flag = False
+    f_index = 0
+    result_frame_num = frames[f_index]
+    final_index = len(frames) - 1
+
+    # iterate video frames
+    for frame in videodata:
+        if frame_num == result_frame_num:
+            if exec_mode == 'debug':
+                print('[DEBUG] frame_num={}, result_frame_num={}'.format(frame_num, result_frame_num))
+
+            # OpenCV uses BGR not RGB. 
+            # Thus, we should convert the color space before write output frames
+            # Convert the color space of the frame from RGB to BGR
+            image_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            vWriter.write(image_frame)
+
+            if not f_flag:
+                f_flag = True
+
+            # to avoid IndexError
+            if f_index < final_index:
+                f_index += 1
+                end_num = result_frame_num + fps
+                result_frame_num = frames[f_index]
+
+                if exec_mode == 'debug':
+                    print('[DEBUG] new: result_frame_num={}, end_num={}'.format(result_frame_num, end_num))
+
+        # write frames
+        elif frame_num <= end_num and f_flag:
+            # Convert the color space of the frame from RGB to BGR
+            image_frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            vWriter.write(image_frame)
+        frame_num += 1
+
+
+
+if __name__ == '__main__':
+    # generate argument parser
+    args = arg_parse()
+    # get the execution mode (either normal or debug)
+    exec_mode = args.mode
+
+    # file path of result files
+    obj_output_file_path = args.obj_result
+    action_output_file_path = args.action_result
+
+    # merge results of action detection system and object detection system
+    results = mergeResults(obj_output_file_path, action_output_file_path, exec_mode)
+
     # argparse arguments
     use_n = True if args.use_n == 'y' else False
     use_obj = True if args.use_obj == 'y' else False
@@ -537,4 +613,5 @@ if __name__ == '__main__':
     # Compression
     frames = compressOutputs(results, use_n, use_obj, exec_mode)
 
-    #TODO
+    # Generate output video by using the results of compression method
+    generateOutput(frames, '../YouCook/Videos/0050.mp4', '../output.avi', exec_mode)
