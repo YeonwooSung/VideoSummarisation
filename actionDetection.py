@@ -511,7 +511,6 @@ print('Start action detection with skvideo\n\n')
 
 
 
-#TODO
 # open the file stream instance to write a file
 f = open('output/sk_actionDetection_output.txt', 'w+')
 
