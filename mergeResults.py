@@ -380,7 +380,28 @@ def compareObjectLists(objects1, objects2, threshold_n=0.4):
         return True
 
 
-def compareNounLists(n_list1, n_list2):
+def compareNounLists(n_list1, n_list2, frameNum, threshold=0.8):
+    if n_list1 == []:
+        return True
+
+    # threshold value to detect change point
+    # threshold_len = ceil of (num_of_nouns_in_list1 * threshold)
+    # By comaring the number of elements in intersection set and threshold_len, we could know if it
+    # is safe to use the current frame as a change point.
+    threshold_len = math.ceil(len(n_list1) * threshold)
+
+    counts = 0
+    for n1 in n_list1:
+        for n2 in n_list2:
+            if n1 == n2:
+                counts += 1
+
+    print('[DEBUG] frame_num={0}: len_of_intersection={1}, threshold_len={2}'.format(frameNum, counts, threshold_len))
+
+    b = threshold_len > counts
+    return b
+
+def checkIfAllDiff_NounLists(n_list1, n_list2):
     """
     Compare noun lists to find the change point.
     If the size of intersection set is 0 (no intersection), then returns True.
@@ -434,10 +455,12 @@ def compressOutputs(results, use_n, use_obj, exec_mode):
                 print(
                     '[DEBUG] change point detected - prev_v={}, v={}'.format(prev_v, v))
 
-            # write result text
-            f.write('{} -> prev_v={}, new_v={}\n'.format(frame_num, prev_v, v))
-            # store the frame_num
-            frames.append(frame_num)
+            # compare noun lists to check if it is safe to use the current frame as a chage point
+            if compareNounLists(prev_n, n_list, frameNum=frame_num):
+                # write result text
+                f.write('{} -> prev_v={}, new_v={}\n'.format(frame_num, prev_v, v))
+                # store the frame_num
+                frames.append(frame_num)
 
             # update the values of variables
             prev_v = v
@@ -446,7 +469,7 @@ def compressOutputs(results, use_n, use_obj, exec_mode):
 
 
         # check if noun_list chagned
-        elif compareNounLists(prev_n, n_list) and use_n:
+        elif checkIfAllDiff_NounLists(prev_n, n_list) and use_n:
             # check if it is debugging mode - if so, print out debugging message
             if exec_mode == 'debug':
                 print('[DEBUG] noun list changed\n\tprev_n={}\n\tn_list={}'.format(prev_n, n_list))
@@ -533,7 +556,6 @@ def generateOutput(frames, video_name, output_video_name, exec_mode):
     vid = skvideo.utils.vshape(videodata)
     print('[DEBUG] video_format={}'.format(vid.shape))
 
-    #TODO
     cap = cv2.VideoCapture(video_name)
     fps = 8
 
@@ -614,4 +636,5 @@ if __name__ == '__main__':
     frames = compressOutputs(results, use_n, use_obj, exec_mode)
 
     # Generate output video by using the results of compression method
+    #TODO target video file path -> argparse
     generateOutput(frames, '../YouCook/Videos/0050.mp4', '../output.avi', exec_mode)
