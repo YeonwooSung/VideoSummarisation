@@ -391,12 +391,8 @@ def processActionDetection(generate_output_file, fs, trn_fs=None, tsm_fs=None, t
     print('The number of frames = {}'.format(len(input_frames)))
     data = transform(input_frames)
 
-    if CUDA:
-        with torch.no_grad():
-            inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0).cuda())
-    else:
-        with torch.no_grad():
-            inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
+    with torch.no_grad():
+        inputs = Variable(data.view(-1, 3, data.size(1), data.size(2)).unsqueeze(0))
 
     probs_v1, idx_v1, probs_n1, idx_n1 = extractProbsAndIndex(mtrn, inputs)
     probs_v2, idx_v2, probs_n2, idx_n2 = extractProbsAndIndex(tsm, inputs)
