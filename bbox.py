@@ -1,3 +1,8 @@
+"""
+@original_author: ayooshmac
+@url: "https://github.com/ayooshkathuria/pytorch-yolo-v3"
+"""
+
 from __future__ import division
 
 import torch
