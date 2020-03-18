@@ -6,7 +6,6 @@ from torch.autograd import Variable
 import numpy as np
 import cv2 
 from util import *
-from preprocess import prep_image, inp_to_image, letterbox_image
 import argparse
 import os
 from darknet import Darknet
