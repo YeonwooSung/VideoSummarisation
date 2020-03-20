@@ -1,0 +1,22 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage{algorithm} 
+\usepackage{algpseudocode} 
+\begin{document} 
+\begin{algorithm}
+    \caption{Pseudo code of filtering irrelevant nouns by comparing similarity values}
+    \begin{algorithmic}[1]
+        \State $similarityVals = []$
+        \State $verb = current_verb$
+        \State $noun_list = list_of_nouns$
+        \For {$n in noun_list$}
+            \State $similarity_val = wordnet.similarity(e1, e2)$
+            \State $similarityVals.append(similarity_val)$
+        \EndFor
+        \State $max_sim = max( similarityVals )$
+        \State $threshold = max_sim / 2$
+        \For{$similarity_value in similarityVals$}
+            \State $remove corresponding word if (similarity_value < threshold)$
+        \EndFor
+    \end{algorithmic}
+\end{algorithm}
+\end{document}
