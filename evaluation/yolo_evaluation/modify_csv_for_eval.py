@@ -13,6 +13,7 @@ f_out = open('detected_food_top10.csv', 'w')
 
 isInit = True
 
+# preprocess data
 for l in f:
     line = l.strip()
     if isInit:
@@ -37,10 +38,12 @@ for l in f:
     newStr += '\n'
     f_out.write(newStr)
 
+# close file streams
 f_out.close()
 f.close()
 
 
+# read csv file to dataframe
 df = pd.read_csv('detected_food_top10.csv')
 
 row_for_other = df.loc[df['object'] == 'other']
@@ -50,14 +53,5 @@ new_sub_df = row_for_other.head(newSize)
 new_df = df.loc[df['object'] != 'other']
 new_df = new_df.append(new_sub_df)
 
+# convert dataframe to csv file
 new_df.to_csv('./detected_food_top10.csv', index=False)
-
-# l1 = row_for_other.index.values.tolist()
-# df.drop(l1, inplace=True)
-# print(df.size)
-# df.append(new_sub_df)
-# print(df.size)
-
-#df.append(row_for_other)
-#TODO df['object'] == 'other' 이 참인 행들을 모두 가져와서, 이 행들의 수를 1/5 (예시) 로 줄이기
-#TODO 그 결과를 데이터프레임에 적용시키기!
