@@ -16,8 +16,8 @@ def readFile(file_path):
             firstLine = False
         else:
             splitted = line.split(',')
-            detected.append(splitted[1])
-            answer.append(splitted[2])
+            detected.append(splitted[1].strip())
+            answer.append(splitted[2].strip())
     f.close()
     return detected, answer
 
