@@ -1,0 +1,44 @@
+Dear students,
+
+In order to take into account the disruption to your SH projects, please create 
+a section in your report which documents:
+
+a) what you could not do because of coronavirus/COVID-19
+b) what adjustments you made and what you are doing instead
+c) what the cost was in terms of additional/lost time and lost functionality.
+
+Also remember the guidance from 17 Mar 2020:
+
+1) All evaluation requiring face-to-face contact (surveys, interviews,
+testing, etc.) that still needs to take place is cancelled. Please
+confirm your current evaluation plans with your supervisor. Students
+already following alternative evaluation plans (without face-to-face
+contact) can continue with them, and if you feel that minor adjustments
+to the original process can make it work, do feel free to implement them
+after consulting your supervisor. However, you should feel no obligation
+(and are not expected) to design a new evaluation framework from scratch
+at this point.
+
+2) If your project was adversely affected by CoVid-19 (cancelling
+face-to-face evaluation, or reduced access to needed hardware), document
+all of it in your report. Also describe your original plans for
+evaluation/hardware development and how you would have acted on them. We
+will instruct all markers to mark such cases without detriment to the
+student.
+
+3) The School Ethics Committee is suspending the ethical amendment
+process, so you do not need to file ethics amendments for these
+alternative plans. You are expected, however, to minimise any risks in
+the new plans, and they must be discussed with, and approved by, your
+supervisor.
+
+4) The digital poster session is cancelled. There will be no
+demonstration to the markers for any CS4098, CS4099, or CS5199 project
+this year. CS4796 projects involve other schools and we are still
+working on the logistics of this.
+
+If you have any questions regarding the processes, feel free to get in
+touch. I am also available via Skype or MS Teams.
+
+Best regards,
+Kasim
