@@ -91,7 +91,6 @@ classes = load_classes("data/coco.names")
 num_classes_food = 100
 classes_food = load_classes("data/food100.names")
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1' #TODO need to remove this line
 
 # check if the CUDA is available
 CUDA = torch.cuda.is_available()
