@@ -30,15 +30,15 @@ def calculate_TP_TN_FP_FN(predicted, actual, label):
         a = answer.strip()
 
         if p == label:
-            # TP or TN
+            # TP or FP
             if p == a:
                 tp += 1
             else:
-                tn += 1
-        else:
-            # FP or FN
-            if p == a:
                 fp += 1
+        else:
+            # TN or FN
+            if p == a:
+                tn += 1
             else:
                 fn += 1
 
@@ -73,7 +73,7 @@ if __name__ == '__main__':
         plt.savefig('confusionMatrix_food_modified.png')
 
     else:
-        print('Calculate TP, TN, FP, FN for all target labels\n')
+        print('Calculate TP, FP, TN, FN for all target labels\n')
         # calculate TP,TN, FP, FN table
         for label in labels:
             tp, tn, fp, fn = calculate_TP_TN_FP_FN(detected, answer, label)
