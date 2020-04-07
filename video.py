@@ -75,7 +75,7 @@ else:
 
 # constants
 numOfFrames_output = 10
-numOfTurns = fps #TODO 5? 10? 50? 100?
+numOfTurns = fps
 
 # global variables to check the cost time
 start = 0
@@ -91,6 +91,9 @@ classes = load_classes("data/coco.names")
 num_classes_food = 100
 classes_food = load_classes("data/food100.names")
 
+
+# check if the CUDA is available
+CUDA = torch.cuda.is_available()
 
 #Set up the neural network
 print("Loading network.....")
@@ -162,8 +165,6 @@ def parseResult(x, results, target_classes, detected_object_list):
 
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
-
-vWriter = cv2.VideoWriter('output/output.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), numOfFrames_output, (frame_width, frame_height))
 
 frames = 0
 start = time.time()
@@ -272,8 +273,7 @@ while cap.isOpened():
 
         # iterate the object list, and write the objects in the text file via file stream
         for obj in objectList:
-            f.write('\t{0}\r\n'.format(obj.getInfoString()))
-            #f.write('\t{}\n'.format(obj.getLabel()))
+            f.write('\t{}\n'.format(obj.getLabel()))
 
         frames += 1  # increase the number of frames that are processed
         timeCost = time.time() - start
@@ -289,7 +289,6 @@ f.close()
 
 # When everything done, release the video capture object
 cap.release()
-vWriter.release()
 
 # Closes all the frames
 cv2.destroyAllWindows()

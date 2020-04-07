@@ -105,6 +105,9 @@ transform = torchvision.transforms.Compose([
 
 
 def load_frames(frames, num_frames=8):
+    """
+    Convert video frame images to list of tensors
+    """
     if len(frames) >= num_frames:
         return frames[::int(np.ceil(len(frames) / float(num_frames)))]
     else:
@@ -406,13 +409,21 @@ def processActionDetection(generate_output_file, fs, trn_fs=None, tsm_fs=None, t
     print('\nTSN')
     verb3, probs_v3, noun_list3 = printVerbsAndNounsWithProbs(probs_v3, idx_v3, probs_n3, idx_n3)
 
-    #TODO testing
+
+    # record output of each model as intermeidate output
+
+    # check if the program needs to record result of TRN
     if trn_fs:
         recordResultOfModel(verb1, noun_list1, trn_fs, prev_idx, frames)
+
+    # check if the program needs to record result of TSN
     if tsn_fs:
         recordResultOfModel(verb1, noun_list1, tsn_fs, prev_idx, frames)
+
+    # check if the program needs to record result of TSM
     if tsm_fs:
         recordResultOfModel(verb1, noun_list1, tsm_fs, prev_idx, frames)
+
 
     # get final verb
     verb_final = mergeSubResults_verb(verb1, verb2, verb3, probs_v1, probs_v2, probs_v3)
