@@ -8,6 +8,8 @@ import cv2
 from util import *
 import argparse
 import os
+import skvideo
+import skvideo.io
 from darknet import Darknet
 from detectedObject import DetectedObject, compareObjectLists, mergeDetectedObjectLists
 import pickle as pkl
@@ -161,7 +163,7 @@ def parseResult(x, results, target_classes, detected_object_list):
 
 
 
-# Detection phase
+# Detection phase (1) OpenCV
 
 frame_width = int(cap.get(3))
 frame_height = int(cap.get(4))
@@ -181,7 +183,7 @@ while cap.isOpened():
     # use if-else statement to check if there is remaining frame.
     if ret:
 
-        #TODO process object detection only when (frames % num of turns == 0)
+        # process object detection only when (frames % num of turns == 0)
         if frames % numOfTurns != 0:
             frames += 1
             continue
@@ -207,7 +209,6 @@ while cap.isOpened():
         if type(output_general) == int or type(output_food) == int:
             frames += 1
             print("FPS of the video is {:5.4f}".format( frames / (time.time() - start)))
-            cv2.imshow("frame", orig_im)
             key = cv2.waitKey(1)
 
             # check if the user pressed the 'q' button to quit the program
@@ -255,8 +256,6 @@ while cap.isOpened():
         list(map(lambda x: parseResult(x, orig_im, classes, detected_general), output_general))
         list(map(lambda x: parseResult(x, orig_im, classes_food, detected_food), output_food))
 
-        #TODO wordnet to filter the objects
-
         # merge detected_general and detected_food
         objectList = mergeDetectedObjectLists(detected_general, detected_food)
 
@@ -290,5 +289,119 @@ f.close()
 # When everything done, release the video capture object
 cap.release()
 
-# Closes all the frames
-cv2.destroyAllWindows()
+
+
+# Detection phase (2) scikit-video
+
+videogen = skvideo.io.vreader(videofile)
+frames = 0
+start = time.time()
+
+# open the file stream instance to write a file
+f = open('./output/objectOutput_sk.txt', 'w+')
+
+# use vreader of scikit-video to read frames from the target video
+for frame_sk in videogen:
+
+    # process object detection only when (frames % num of turns == 0)
+    if frames % numOfTurns != 0:
+        frames += 1
+        continue
+
+    # convert rgb to bgr (OpenCV uses BGR, and skvideo uses RGB)
+    frame = cv2.cvtColor(frame_sk, cv2.COLOR_RGB2BGR)
+
+    img, orig_im, dim = prep_image(frame, inp_dim)
+    im_dim = torch.FloatTensor(dim).repeat(1, 2)
+
+    if CUDA:
+        im_dim = im_dim.cuda()
+        img = img.cuda()
+
+
+    with torch.no_grad():
+        output_general = model(Variable(img), CUDA)
+    with torch.no_grad():
+        output_food = model_foodDomain(Variable(img), CUDA)
+
+    # gets the results of the object detection
+    output_general = write_results(output_general, confidence_coco, num_classes, nms_conf=nms_thresh_coco)
+    output_food = write_results(output_food, confidence_food, num_classes_food, nms_conf=nms_thresh_food)
+
+    # check the type of the output
+    if type(output_general) == int or type(output_food) == int:
+        frames += 1
+        print("FPS of the video is {:5.4f}".format( frames / (time.time() - start)))
+        key = cv2.waitKey(1)
+
+        # check if the user pressed the 'q' button to quit the program
+        if key & 0xFF == ord('q'):
+            break
+        continue
+
+
+    im_dim_origin = im_dim
+
+    im_dim_general = im_dim.repeat(output_general.size(0), 1)
+    scaling_factor = torch.min(inp_dim/im_dim_general, 1)[0].view(-1, 1)
+
+    # rescale the output - general YOLO
+    output_general[:, [1,3]] -= (inp_dim - scaling_factor*im_dim_general[:,0].view(-1,1)) / 2
+    output_general[:, [2,4]] -= (inp_dim - scaling_factor*im_dim_general[:,1].view(-1,1)) / 2
+    output_general[:, 1:5] /= scaling_factor
+
+
+    im_dim = im_dim_origin
+
+    im_dim_food = im_dim.repeat(output_food.size(0), 1)
+    scaling_factor = torch.min(inp_dim/im_dim_food, 1)[0].view(-1, 1)
+
+    # rescale the output - domain YOLO
+    output_food[:, [1,3]] -= (inp_dim - scaling_factor*im_dim_food[:,0].view(-1,1)) / 2
+    output_food[:, [2,4]] -= (inp_dim - scaling_factor*im_dim_food[:,1].view(-1,1)) / 2
+    output_food[:, 1:5] /= scaling_factor
+
+
+    # reshape the outputs by using the clamp function
+
+    for i in range(output_general.shape[0]):
+        output_general[i, [1,3]] = torch.clamp(output_general[i, [1,3]], 0.0, im_dim_general[i,0])
+        output_general[i, [2,4]] = torch.clamp(output_general[i, [2,4]], 0.0, im_dim_general[i,1])
+    
+    for i in range(output_food.shape[0]):
+        output_food[i, [1, 3]] = torch.clamp(output_food[i, [1, 3]], 0.0, im_dim_food[i, 0])
+        output_food[i, [2,4]] = torch.clamp(output_food[i, [2,4]], 0.0, im_dim_food[i,1])
+
+    detected_general = []
+    detected_food = []
+
+    # use the lambda to draw rectangles on the frames
+    list(map(lambda x: parseResult(x, orig_im, classes, detected_general), output_general))
+    list(map(lambda x: parseResult(x, orig_im, classes_food, detected_food), output_food))
+
+    # merge detected_general and detected_food
+    objectList = mergeDetectedObjectLists(detected_general, detected_food)
+
+    # cv2.waitKey(time) waits for "time" miliseconds to get the value of the pressed key
+    # "& 0xFF" is essential for 64bit OS - not necessary for 32bit OS
+    key = cv2.waitKey(1) & 0xFF
+
+    # check if the pressed key is 'q'
+    if key == ord('q'):
+        break
+
+
+    f.write('current frame: %d\n' % frames)
+
+    # iterate the object list, and write the objects in the text file via file stream
+    for obj in objectList:
+        f.write('\t{}\n'.format(obj.getLabel()))
+
+    frames += 1  # increase the number of frames that are processed
+    timeCost = time.time() - start
+    print(timeCost)
+    print("FPS of video processing is {:5.2f}".format(frames / (timeCost)))
+
+
+# close the file stream
+f.close()
