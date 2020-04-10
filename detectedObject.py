@@ -3,6 +3,10 @@ import math
 
 
 class DetectedObject():
+    """
+    The aim of this class is to store the information about the objects that the YOLOv3 model detected.
+    """
+
     def __init__(self):
         super().__init__()
         self.vertex1 = []
@@ -12,23 +16,53 @@ class DetectedObject():
         self.label = ''
 
     def setVertices(self, vertex1, vertex2):
+        """
+        Set the vertices.
+        :param vertex1: The first vertex of the object
+        :param vertex2: The second vertex of the object
+        """
         self.vertex1 = vertex1
         self.vertex2 = vertex2
         self.calculateMidPointAndSize()
 
     def setLabel(self, label):
+        """
+        Set the label of the detected object.
+
+        :param label: The label of the object
+        """
         self.label = label
 
     def getLabel(self):
+        """
+        Getter for the label.
+
+        :return label: The label of the detected object.
+        """
         return self.label
     
     def getVertex1(self):
+        """
+        Getter for the vertex1.
+
+        :return vertex1: The first vertex of the detected object.
+        """
         return self.vertex1
     
     def getVertex2(self):
+        """
+        Getter for the vertex2.
+
+        :return vertex2: The second vertex of the detected object.
+        """
         return self.vertex2
 
     def calculateMidPointAndSize(self):
+        """
+        Calculate the mid point and the size of the bounding box that surrounds the object.
+        The value of the size is calculated by computing the euclidean distance between vertex1 and vertex2.
+        The middle point is calculated by computing the mean of x values and y values of 2 vertices.
+        """
         mid_0 = (self.vertex1[0] + self.vertex2[0]) / 2
         mid_1 = (self.vertex1[1] + self.vertex2[1]) / 2
         self.midpoint = [mid_0, mid_1]
@@ -36,12 +70,24 @@ class DetectedObject():
         self.size = math.sqrt(pow((self.vertex2[0] - self.vertex1[0]), 2) + pow((self.vertex2[1] - self.vertex1[1]), 2))
 
     def getSizeAndMidPoint(self):
+        """
+        Returns the size and middle point of the bounding box.
+
+        :return size:     The size of the bounding box.
+        :return midpoint: The middle point of the bounding box
+        """
         if (self.size != 0 and len(self.midpoint) != 0):
             return self.size, self.midpoint
         self.calculateMidPointAndSize()
         return self.size, self.midpoint
 
     def getInfoString(self):
+        """
+        Get the information string.
+        The information string contains the label, and vertices.
+
+        :return: Information string  ->  format = '{label}, {vertex1_x}, {vertex1_y}, {vertex2_x}, {vertex2_y}'
+        """
         return '{0} ({1}, {2}) ({3}, {4})'.format(self.label, self.vertex1[0], self.vertex1[1], self.vertex2[0], self.vertex2[1])
 
 
