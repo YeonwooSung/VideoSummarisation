@@ -1,0 +1,8 @@
+dataset,filename,original,result
+epic_train,P14_5.mp4,71,8
+epic_train,P15_1.mp4,47,14
+epic_train,P15_2.mp4,707,289
+epic_train,P28_5.mp4,524,147
+epic_train,P28_6.mp4,764,127
+epic_train,P31_5.mp4,483,39
+epic_train,P31_6.mp4,187,83
