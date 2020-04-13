@@ -9,4 +9,4 @@ __pycache__
 *.tar
 epicKitchens_pretrained/*.txt
 *_output.txt
-output/*
+output/*.txt
