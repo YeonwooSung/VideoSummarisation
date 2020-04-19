@@ -391,7 +391,6 @@ def recordResultOfModel(verb, nouns, fs, prev_index, cur_index):
 
 def processActionDetection(generate_output_file, fs, trn_fs=None, tsm_fs=None, tsn_fs=None):
     input_frames = load_frames(imgs)
-    print('The number of frames = {}'.format(len(input_frames)))
     data = transform(input_frames)
 
     with torch.no_grad():
@@ -439,8 +438,7 @@ def processActionDetection(generate_output_file, fs, trn_fs=None, tsm_fs=None, t
     # get final noun list
     noun_list_res = mergeSubResults_nouns(noun_list1, noun_list2, noun_list3)
 
-    #TODO set the best noun as a head of the noun_list_res
-
+    # write the results via file output stream
     if generate_output_file:
         fs.write('from {0} to {1} :\r\n'.format(prev_idx, frames))
         fs.write('v={}\r\n'.format(verb_final))
@@ -537,10 +535,13 @@ for frame in videogen:
     pil_image = Image.fromarray(frame)
     imgs.append(pil_image)
 
+    # check  if the number of frames is greater than the target number of frames
     if len(imgs) >= target_num_of_frames:
         processActionDetection(generate_output_file, f, trn_fs=f_trn, tsm_fs=f_tsm, tsn_fs=f_tsn)
         imgs = []
-        print('frames={}'.format(frames))
+        print('Current frame number = {}'.format(frames))
+
+        # set the value of the previous index with current frame index
         prev_idx = frames + 1
 
     frames += 1
