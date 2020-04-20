@@ -36,5 +36,3 @@ if __name__ == '__main__':
     epic_train_min, epic_train_max, epic_train_avg = iterate_df(epic_train_df)
     print('EpicKitchens - Testing')
     epic_test_min, epic_test_max, epic_test_avg = iterate_df(epic_test_df)
-
-    #TODO
