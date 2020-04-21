@@ -143,6 +143,7 @@ imgs = [] # a list to store frames
 
 # change the models to the evaluation mode
 trn.eval()
+mtrn.eval()
 tsn.eval()
 tsm.eval()
 
