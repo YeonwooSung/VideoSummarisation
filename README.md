@@ -1,5 +1,5 @@
-# VideoGAN
+# VideoSummarisation
 
-[retrainExample](https://github.com/ultralytics/yolov3/wiki/Example:-Transfer-Learning)
+Video summarisation system that uses the object detection (YOLOv3) and action detection (Epic Kitchens).
 
-Summarization of Video by Detecting Objects and Actions (SumDOA or ViDOA)
+This repository contains the codes for my SH project in University of St Andrews.
