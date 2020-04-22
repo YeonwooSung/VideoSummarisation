@@ -118,9 +118,9 @@ The \hyperlink{ref14}{object tracking system [14]} is a component that keeps tra
 
 \subsubsection{Object Detection - YOLOv3}
 
-"YOLO", which stands for You Only Look Once, is a real-time object detection system that is one of the most widely used object detection models. In this project, the YOLOv3 model is used to detect the objects in each frame of the video. According to the \hyperlink{ref2}{J. Redmon et al. [2]}, the YOLOv3 guarantees to detect objects within short time. With the COCO dataset, the YOLOv3 could handle 45 frames per second with 51\% of accuracy, where the RetinaNet only could handle 15 frames per second with 50\% of accuracy. Henceforth, it would be possible to say that the YOLOv3 is extremely fast and accurate.
+"YOLO", which stands for You Only Look Once, is a real-time object detection system that is one of the most widely used object detection models. In this project, the YOLOv3 model is used to detect the objects in each frame of the video. According to the \hyperlink{ref2}{J. Redmon et al. [2]}, the YOLOv3 guarantees to detect objects within reasonable execution time.
 
-In general, most detection systems repurpose classifiers or localizers to perform detection. Those detection systems apply the model to an image at multiple locations and scales, and consider the high scoring regions of the image as detections. However, the YOLO model uses a different approach. According to \hyperlink{ref2}{J. Redmon et al. [2]}, YOLO applies a single neural network to the full image. This network divides the image into regions and predicts bounding boxes and probabilities for each region. These bounding boxes are weighted by the predicted probabilities. By doing this, the YOLO model has several advantages over classifier-based systems. Firstly, the predictions are informed by the global context in the image, since YOLO looks at the whole image at test time. Moreover, the YOLO makes predictions with a single network evaluation unlike the R-CNN model, which requires thousands of networks for a single image.
+In general, most detection systems repurpose classifiers or localizers to perform detection. Those detection systems apply the model to an image at multiple locations and scales, and consider the high scoring regions of the image as detections. However, the YOLO model uses a different approach. According to \hyperlink{ref2}{J. Redmon et al. [2]}, YOLO applies a single neural network to the full image. This network divides the image into regions and predicts bounding boxes and probabilities for each region. These bounding boxes are weighted by the predicted probabilities. By doing this, the YOLO model has several advantages over classifier-based systems. Firstly, the predictions are informed by the global context in the image, since the YOLO model looks at the whole image at test time. Moreover, the YOLO makes predictions with a single network evaluation unlike the R-CNN model, which requires thousands of networks for a single image.
 
 Basically, the YOLOv3 makes the predictions to find the bounding boxes. For each bounding box, the YOLOv3 model uses the multi-label classification to predict the class that the given bounding box may contain. While making the prediction, the YOLOv3 model uses the feature extractor, which has several convolutional layers, to extract the features from each bounding box. By using the extracted features, it predicts to find the class that is most suitable to the given bounding box, and return the name of the detected object and the coordinates of the bounding box. By using this algorithm, the YOLOv3 could detect objects in the image within a short time with fairly good accuracy.
 
@@ -258,6 +258,12 @@ After creating the text file of results of the compression, the system will gene
 
 When generating the result video, the scikit-video was used, because of the codec issue of the OpenCV-python library that I mentioned above. Since the scikit-video uses the ffmpeg internally, the ffmpeg should be installed in the machine before running the compression process.
 
+
+\section{COVID-19}
+
+Due to the COVID-19, I had to go back to Korea during the semester. After arriving in Korea, I had to stay in a private room in the medical center for 2 weeks for the quarantine. During those 2 weeks, I was not able to access online materials. In other words, I was not able to work for this project for those 2 weeks. After that, I tried to test my program via ssh, and I found that for some reason I was not able to access BigTMP. Furthermore, when I try to run the action detection system, I realised that the FFmpeg is not installed in the lab machine. When I tried to install it, it kept saying that I do not have the root authentication. Thus, I changed my plan from "evaluating by accessing lab machines via ssh" to "doing all the evaluation on my laptop". So, I had to re-download all datasets in the BigTMP, so I had to re-download all those datasets on my laptop. Therefore, I would like to mention in this section that due to the COVID-19, I was not able to work for this project for 2 weeks due to the quarantine, and I was not able to use the required Hardware.
+
+
 \section{Results and Discussion}
 
 \subsection{Comparison with DOER}
@@ -305,23 +311,47 @@ Unlike the food YOLOv3 model, the YOLOv3 model that is retrained with the Edinbu
     \label{fig:cm_food100}
 \end{figure}
 
-As you could see in the image above, the predicted values are biased for some reason. Perhaps, this is because that I made some mistake whild doing the data augmentation methods that I applied for the Edinburgh Utensils dataset. As I mentioned in the Design and Implementation section, I decided to use the data augmentation to increase the number of images for each class. Basically, I flipped vertically the image, and rotate the images by $n * \pi / 6$ (n = 1 .. 5). And I am assuming that the rotated images made the model hard to classify utensils, which affected to the accuracy of the utensil classification model. Due to the time limit, I was not able to restart the retraining process, so I was not able to find the actual problem that decrease the accuracy of the utensil classification YOLOv3 model.
+As you could see in the image above, the predicted values are biased for some reason. Perhaps, this is because that I made some mistake whild doing the data augmentation methods that I applied for the Edinburgh Utensils dataset. As I mentioned in the Design and Implementation section, I decided to use the data augmentation to increase the number of images for each class. Basically, I flipped vertically the image, and rotate the images by $n * \pi / 6$ (n = 1 .. 5). And I am assuming that the rotated images made the model confused to classify utensils, which affected to the accuracy of the utensil classification model. Due to the time limit, I was not able to restart the retraining process, so I was not able to find the actual problem that decrease the accuracy of the utensil classification YOLOv3 model.
 
 Fortunately, the original YOLO model covers some kitchen utensils, and the action detection system detects the noun for the action. Henceforth, rather than keep retraining the YOLO model until it works properly, it was decided that combining the result of general YOLO model and the nouns that are detected by the action detection system.
 
 \subsubsection{Evaluation for the action detection system}
 
-To evaluate the performance of the action detection system, the testing set in the Epic-Kitchens dataset was used. For all TSN, TRN, and TSM models, the ResNet-50 backbone was used with the RGB counterparts.
+To evaluate the performance of the action detection system, the testing set of the Epic-Kitchens dataset, which contains the videos that the action detection models never have seen while training process, was used. For all TSN, TRN, and TSM models, the ResNet-50 backbone was used with the RGB counterparts.
 
-According to \hyperlink{ref8}{D. Damen et. al. [8]}, the verb classification relies on temporal modelling, however, the noun classification does not rely on the temporal modelling as much since objects can be recognised from a single frame. Thus, initially, I was planning to compare the performance and accuracy of verb classification for each TSM, TRN, and TSN with different backbone. But, I found that the provided pretrained model does not support BN-Inception backbone for some models, thus, I decided to keep using the ResNet-50 as a backbone for all 3 models for the consistency.
+According to \hyperlink{ref8}{D. Damen et. al. [8]}, the verb classification relies on temporal modelling, however, the noun classification does not rely on the temporal modelling as much since objects can be recognised from a single frame. Thus, initially, I was planning to compare the performance and accuracy of verb classification for each TSM, TRN, and TSN with different backbone. However, I found that the provided pretrained model does not support BN-Inception backbone for some models, thus, I decided to keep using the ResNet-50 as a backbone for all 3 models for the consistency.
 
-As you could see in the figure [TODO], for the verb classification, the accuracy of the TSN is much lower than the accuracy of TRN and TSM. Here, it would be possible to say that the TSM and TRN extracts temporal relational information much better than the TSN model. Also, you could find that the TSM and TSN perform the best on the noun classification task, with TRN models lagging 2–3\% points behind. A possible explanation for the observed drop is that the relation module within TRN places heavy emphasis on extracting temporal relational information, which is of little relevance in recognising objects. Thus, it would be possible to say that the TRN relies heavily on extracting temporal relational information, so that the TRN works the best on the verb classification, but does not work well on the noun classification.
+As you could see in the figure \ref{fig:chartForEvalActionDetection}, for the verb classification, the accuracy of the TSN is much lower than the accuracy of TRN and TSM. Here, it would be possible to say that the TSM and TRN extracts temporal relational information much better than the TSN model. Also, you could find that the TSM and TSN perform the best on the noun classification task, with TRN models lagging about 3\% points behind. A possible explanation for the observed drop is that the relation module within TRN places heavy emphasis on extracting temporal relational information, which is of little relevance in recognising objects. Thus, it would be possible to say that the TRN relies heavily on extracting temporal relational information, so that the TRN works the best on the verb classification, but does not work well on the noun classification.
 
-TODO - fig:chartForEvalActionDetection (also, replace [TODO] above with suitable ref tag)
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{imgs/action_detection_accuracy.png}
+    \caption{Accuracy of action detection models (TSN, TSM, and TRN) for both verb classification and noun classification}
+    \label{fig:chartForEvalActionDetection}
+\end{figure}
+
+As you know, the action detection system gives the best verb and Top 5 nouns. Thus, the evaluation program checked if the predicted best verb is equal to the answer verb when calculating the accuracy of verb classification, where the evaluation program checked if the answer noun is contained in the Top 5 nouns for evaluating the noun classification. As you could see in the figure \ref{fig:chartForEvalActionDetection}, the average accuracy of verb classification is higher than the average accuracy of noun classification, even though the system returns Top 5 nouns. Henceforth, it was decided to give more points to the detected verbs than the detected nouns.
 
 \subsubsection{Evaluation for the Video Summarisation system}
 
-TODO - ????
+To test how far the system can reduce the length of the video, the Epic Kitchens dataset, which is used for training and testing the action detection system, is used. Basically, the compression method of the video summarisation system strongly depends on the accuracy of the action detection system, because the system looks for the verb changes when compressing the result. According to the \hyperlink{ref8}{D. Damen et al. [8]}, with the pretrained model, the accuracy of the verb classification is much higher when using the training set rather than using the testing set.
+
+What I did for this section is, execute the video summarisation system with videos in Epic Kitchens training set (dataset that is used for training the action detection system) and testing set (dataset that is used for testing the action detection system). The main reason of evaluating the system with both training set and testing set is because \hyperlink{ref8}{D. Damen et al. [8]} stated that for the verb classification with the pre-trained model, the accuracy when using the training set is about 8\% higher than the accuracy when using the testing set. It would be worth checking if this matters to the performance of the video summarisation system, so I planned to evaluate the compression rate by comparing the average compression rate of video summarisation with the training set and testing set. After running the video summarisation system, the original length of the video and the length of the summarised video were recorded in the CSV file. Then, by using those results, the compression rate was calculated using the following equation.
+
+\[compression\_rate = len(result\_of\_summarisation) / len(original\_video)\]
+
+The following table shows the min, max, and average compression rates for both training set and testing set of Epic Kitchens dataset. As you could see, the average compression rate of the training set is 0.254, where the average compression rate of the testing set is 0.309. Therefore, it would be possible to say that the more accurate the result of the action detection system, the better the video summarisation system could perform.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.7]{imgs/compression_rate.png}
+    \label{fig:compression_rate_table_EpicKitchens}
+\end{figure}
+
+As you could see in the table above, the highest compression rate is about 45\%. The main reason the high compression rate is because the video summarisation system that I designed is not able to compress the video if the same scenes (or same actions) are repeated. For example, if a person takes a cup, washes the cup, puts it back to the table, and does the same thing several times, then the system that I designed is not able to summarise this properly. Unfortunately, I was not able to find and implement solutions that could solve this issue. If I found a suitable solution and implemented it, probably, then the performance of the video summarisation system would be much better than the current version.
+
+To evaluate the video summarisation system properly, the generated result (summarised texts) should be compared with the annotations or text recipes. Unfortunately, however, the Epic Kitchens dataset does not provide the text recipes of the cooking videos. Since there is no recipes to compare, I was not able to validate the generated texts.
+
 
 \subsection{Discussion}
 
@@ -397,16 +427,32 @@ TODO - ????
 
 \subsection{Instructions}
 
+TODO - ????
+
 \subsection{Technologies Used}
 
 \subsubsection{YOLOv3}
 
-TODO - pytorch, opencv, etc
+To implement the object detection system, PyTorch and OpenCV were used.
 
-\subsubsection{Action Detection Model}
+\textbf{1. PyTorch}
+
+To implement the YOLOv3 model with Python language, the PyTorch was used. The PyTorch is a Python package that provides two high-level features, which are 1) computation of tensor with strong GPU acceleration, and 2) implementing deep neural networks built on a tape-based autograd system. PyTorch provides simple and straightforward APIs, so that the programmers could implement deep nerual networks easily and fastly.
+
+\textbf{2. OpenCV}
+
+The OpenCV is an open-sourced library that provides various functions and tools for Computer Vision. Unlike OpenCV C/C++ libarary, the opencv-python is easy to install and use. By using the pip (a package manager for python language), it could be installed in all macOS, Windows, and Linux. In this project, the OpenCV was used for various tasks such as reading video frames, getting the fps of the target video, data augmentation, and converting the color space of video frames.
+
+\subsubsection{Action Detection System}
+
+To implement the action detection system, PyTorch Hub and scikit-video were used.
+
+\textbf{1. PyTorch Hub}
 
 \hypertarget{actionDetection_used}{The PyTorch Hub} is a simple API and workflow the provides the basic building blocks for improving machine learning research reproducibility. The PyTorch Hub consists of a pre-trained model repository designed specifically to facilitate research reproducibility.  Therefore, by using the PyTorch Hub, researchers in various fields could easily discover each other’s research, leverage it as a baseline and build new cutting edge research from there. By using the PyTorch Hub, the system will download the pretrained action detection models.
 
-TODO - skvideo
+\textbf{2. scikit-video}
+
+The scikit-video is a python library that provides functions and tools for processing video files. Especially, the skvideo.io module, which was used for fixing the codec issue of the opencv-python, is created for using a FFmpeg/LibAV backend to read and write videos. So, by using the FFmpeg command line tool as a backend, the scikit-video library made it possible to process the video files that uses codecs or encoding methods that are not supported by the opencv-python library.
 
 \end{document}
