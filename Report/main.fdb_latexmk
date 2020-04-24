@@ -1,7 +1,7 @@
 # Fdb version 3
-["pdflatex"] 1587464186 "/Users/CY/Desktop/VideoSumGAN/Report/main.tex" "/Users/CY/Desktop/VideoSumGAN/Report/main.pdf" "main" 1587464186
-  "/Users/CY/Desktop/VideoSumGAN/Report/main.aux" 1587464186 8 a94a2480d3289e625eea47cd1b285758 ""
-  "/Users/CY/Desktop/VideoSumGAN/Report/main.tex" 1587464184 67743 90120902f6ab8a49959c3df74202bd07 ""
+["pdflatex"] 1587694651 "/Users/CY/Desktop/VideoSumGAN/Report/main.tex" "/Users/CY/Desktop/VideoSumGAN/Report/main.pdf" "main" 1587694651
+  "/Users/CY/Desktop/VideoSumGAN/Report/main.aux" 1587694651 8 a94a2480d3289e625eea47cd1b285758 ""
+  "/Users/CY/Desktop/VideoSumGAN/Report/main.tex" 1587694647 72632 2edf676fc585bb99da29718eb25dd6a7 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/map/fontname/texfonts.map" 1511824771 3332 103109f5612ad95229751940c61aada0 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmbx10.tfm" 1480098701 1328 c834bbb027764024c09d3d2bf908b5f0 ""
   "/usr/local/texlive/2018/texmf-dist/fonts/tfm/public/cm/cmbx12.tfm" 1480098701 1324 c910af8c371558dc20f2d7822f66fe64 ""
@@ -77,14 +77,15 @@
   "imgs/compression_rate.png" 1587362673 18871 48c47ec5b8766a6b8929882c89cec5f8 ""
   "imgs/confusionMatrix_food_modified.png" 1584733594 42043 7a37e25ee66a20372bcb3b7fd150886e ""
   "imgs/pseudo_code.png" 1584639756 60519 334ac39f521f83c692705f2b14feffd6 ""
+  "imgs/standrews_logo.png" 1587556076 79605 268c1da34edffe0eddf75af046d4f0fb ""
   "main.aux" 0 -1 0 ""
   "main.out" 0 -1 0 ""
-  "main.tex" 1587464184 67743 90120902f6ab8a49959c3df74202bd07 ""
+  "main.tex" 1587694647 72632 2edf676fc585bb99da29718eb25dd6a7 ""
   (generated)
+  "main.out"
   "main.log"
-  "main.aux"
   "main.toc"
   "main.pdf"
   "/Users/CY/Desktop/VideoSumGAN/Report/main.pdf"
   "/Users/CY/Desktop/VideoSumGAN/Report/main.log"
-  "main.out"
+  "main.aux"

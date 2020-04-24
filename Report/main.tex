@@ -11,16 +11,18 @@
 
 \title{SH Project Report}
 \author{Yeonwoo Sung}
-\date{April 2020}
+\date{April 27th 2020}
 
 \begin{document}
 
 \maketitle
+\titlepic{\includegraphics[width=300]{imgs/standrews_logo.png}}
 
 \newpage
 
 \addcontentsline{toc}{section}{Declaration}
 \section*{Declaration}
+
 I declare that the material submitted for assessment is my own work except where credit is explicitly given to others by citation or acknowledgement. 
 This work was performed during the current academic year except where otherwise stated.
 
@@ -63,11 +65,16 @@ When you watch the online tutorial videos, you might think that the tutorial vid
 
 Due to this reason, I wanted to try implementing the program which performs the video summarization. By using the video summarization, it would be possible to provide only the essential parts of the data by extracting the highlight parts of the video. Especially, if you are running out of time for some reason, it might be worth to watch a summarized version of the video to get the essential knowledge.
 
+\subsection{COVID-19}
+
+Due to the COVID-19, I had to go back to Korea during the semester. After arriving in Korea, I had to stay in a private room in the medical center for 2 weeks for the quarantine. During those 2 weeks, I was not able to access online materials. In other words, I was not able to work for this project for those 2 weeks. After that, I tried to test my program via ssh, and I found that for some reason I was not able to access BigTMP. Furthermore, when I try to run the action detection system, I realised that the FFmpeg is not installed in the lab machine. When I tried to install it, it kept saying that I do not have the root authentication. Thus, I changed my plan from "evaluating by accessing lab machines via ssh" to "doing all the evaluation on my laptop". So, I had to re-download all datasets in the BigTMP, so I had to re-download all those datasets on my laptop. Therefore, I would like to mention in this section that due to the COVID-19, I was not able to work for this project for 2 weeks due to the quarantine, and I was not able to use the required Hardware.
+
+
 \section{Related Works}
 
 \subsection{Object detection for video summarization}
 
-\hyperlink{ref18}{O. Utsumi et al. [18]} proposed an object detection and tracking method for the video summarization system for a soccer game, which could describe the content of the soccer game by tracking the objects in the frames. In the paper, \hyperlink{ref18}{O. Utsumi et al. [18]} stated that they considered the characteristics of soccer video images, that most non-object regions are roughly single-colored, which is green, and most objects tend to have locally strong edges. Utsumi also mentioned that "the result of an evaluation experiment applied to actual soccer video showed very high detection rate in detecting player regions without occlusion and the promising ability for regions with occlusion”.
+\hyperlink{ref18}{O. Utsumi et al. [18]} proposed an object detection and tracking method for the video summarization system for soccer games, which could describe the content of the soccer game by tracking the objects in the frames. In the paper, \hyperlink{ref18}{O. Utsumi et al. [18]} stated that they considered the characteristics of soccer video images, that most non-object regions are roughly single-colored, which is green, and most objects tend to have locally strong edges. Utsumi also mentioned that "the result of an evaluation experiment applied to actual soccer video showed very high detection rate in detecting player regions without occlusion and the promising ability for regions with occlusion”.
 
 Similarly, \hyperlink{ref19}{X. Yu et al. [19]} proposed a ball tracking framework for broadcast soccer video. This framework processes each frame in the video to remove all unnecessary objects and non-objects so that it could concentrate on the most essential objects, which are a ball and players. After removing all unnecessary objects from each frame, it checks the size of the remaining objects to distinguish a ball and people. After that, the framework compares each processed frame to track all players and the ball to summarize the content of the soccer video.
 
@@ -93,9 +100,7 @@ For example, if there was an apple on the table in the previous frame, however, 
 
 \subsection{Mid-Project Changes}
 
-At the beginning, I was planning to use frame comparison and object detection to extract features from frames to find the key frames, and do the reconstruction with the found key frames. And after reading some articles, I found that the frame comparison is not as easy as I expected. After having some more literature reviews, I found that there is a technique called "action detection", which uses the pre-trained model to detect the action from the frames. Thus, I decided to use the action detection rather than implementing my own feature extractor by using the frame comparison.
-
-TODO need to recheck...????
+In the beginning, I was planning to use the object detection and the frame comparison to extract features from frames to find the key frames, and reconstruct the summarised video by using the selected key frames. After a few weeks of searching for papers and information about video summarisation and vision processing, I realised that the frame comparison is not as easy as I expected. After having several times of supervisor meetings, I was able to find a suitable replacement of the frame comparison method, which is called "action detection". The action detection is a machine learning algorithm that trains the neural networks to detect the actions from the video frames. In other words, the action detection program could extract information from the stream of images, where the object detection only could extract information from single image. Thus, I decided to replace the frame comparison method with the action detection, so that the system could extract data from both video frames and stream of video frames.
 
 \subsection{Planned Flow}
 
@@ -259,11 +264,6 @@ After creating the text file of results of the compression, the system will gene
 When generating the result video, the scikit-video was used, because of the codec issue of the OpenCV-python library that I mentioned above. Since the scikit-video uses the ffmpeg internally, the ffmpeg should be installed in the machine before running the compression process.
 
 
-\section{COVID-19}
-
-Due to the COVID-19, I had to go back to Korea during the semester. After arriving in Korea, I had to stay in a private room in the medical center for 2 weeks for the quarantine. During those 2 weeks, I was not able to access online materials. In other words, I was not able to work for this project for those 2 weeks. After that, I tried to test my program via ssh, and I found that for some reason I was not able to access BigTMP. Furthermore, when I try to run the action detection system, I realised that the FFmpeg is not installed in the lab machine. When I tried to install it, it kept saying that I do not have the root authentication. Thus, I changed my plan from "evaluating by accessing lab machines via ssh" to "doing all the evaluation on my laptop". So, I had to re-download all datasets in the BigTMP, so I had to re-download all those datasets on my laptop. Therefore, I would like to mention in this section that due to the COVID-19, I was not able to work for this project for 2 weeks due to the quarantine, and I was not able to use the required Hardware.
-
-
 \section{Results and Discussion}
 
 \subsection{Comparison with DOER}
@@ -285,7 +285,7 @@ When writing the DOER report, I was planning to implement the video summarisatio
 
 The image above shows the confusion matrix of the YOLO model that is retrained with the Food100 dataset. As the confusion matrix shows, the YOLO model is well trained.
 
-To further understand the accuracy of the YOLOv3 model that is retrained with the Food100 dataset, I look the confusion amongst the top 10 most frequent classes in the dataset. To implement this matrix, I replaced all remaining classes with 'other'. The figure \ref{fig:cm_food100_top10_classes} shows the confusion matrix, and the table below shows the TP, TN, FP, and FN values of each TOP 10 class of the food classification model.
+To further understand the accuracy of the YOLOv3 model that is retrained with the Food100 dataset, I look the confusion amongst the top 10 most frequent classes in the Food100 dataset. To implement this confusion matrix, I replaced the top 90 most infrequent classes, which are not included in the top 10 most frequent classes, with 'other'. The figure \ref{fig:cm_food100_top10_classes} shows the confusion matrix, and the table below shows the TP, TN, FP, and FN values of each TOP 10 class of the food classification model.
 
 \begin{figure}[H]
     \centering
@@ -361,11 +361,29 @@ This project proposes a novel model for the video summarisation. This system per
 
 \subsubsection{Future Work and Improvements}
 
-TODO - ????
+There are several points that could be improved in the future.\newline
+
+\textbf{Object detection system}
+
+When searching for the dataset to retrain the YOLOv3 model, I found that none of the dataset provides the images for the ingredients of the foods. Most of the datasets that contains the images about foods only have images of actual foods and dishes. Clearly, it would be possible to improve the performance of video summarisation system by making object detection system to detect ingredients in the video frames.
+
+Furthermore, I found that the YOLOv3 model cannot recognise the processed food ingredients properly. For example, the YOLOv3 could recognise carrots, however, it cannot recognise the chopped carrots. Definitely, many ingredients were processed and transformed in the cooking videos. To summarise the cooking videos correctly, the techniques that helps the system to recognise the processed food ingredients should be invented.\newline\newline
+
+\textbf{Action detection system}
+
+For the action detection system, the location of the camera and sensors are important. This means that if the action detection models are trained with the video dataset in third person vision, then the action detection models would not be able to classify actions correctly with the videos in first person vision. The Epic Kitchens, which is used for training and testing the action detection system, is a dataset in first person vision. In other words, the video summarisation system might not work properly with videos in third person vision. I think it might be worth to train action detection models with other datasets that contain third person vision videos, and compare the performance of those new models with the Epic Kitchens pretrained models.\newline
+
+\textbf{NLP methods in the merging process}
+
+Also, the natural language processing functions that I implemented for filtering the irrelevant words from the results could be further improved. In the current version, I simply calculate the threshold value by dividing the maximum similarity value with 2. Probably, this might be too straightforward. If it is possible to improve the filtering method, the system would be able to generate much clear result texts.\newline
 
 \section{Conclusion}
 
-TODO - ????
+The video summarisation system that I designed uses the object detection and action recognition models to extract information from video frames. The object detection system can detect objects and classify objects. Similarly, the action detection system can recognise action in the given video frames, and classify verbs and nouns for the given action. The results of object detection system and action detection system are merged by filtering irrelevant words by calculating similarity values with wordnet. After merging the results, the system compresses the merged results to summarise the contents of the video. When compressing the results, the system checks if there are any meaningful changes by comparing the verbs, nouns, and objects. The average compression rate that is calculated by evaluating the video summarisation system is reasonably small, which means that the system could compress the results of detection properly.
+
+However, it is hard to say that the system could filter all irrelevant words by calculating similarity values with wordnet. The final result texts still contain some irrelevant words, which makes the summarisation system confuse when compressing the results. Furthermore, as I mentioned in the evaluation section, the compression component cannot handle the repeating actions. Although it would be difficult to say that the summarised texts are accurate, since I did not validate the generated summary text files because I did not have the text recipes to compare with.
+
+By doing this project, I was able to learn how to use and train the YOLOv3 model. Also, I learned many testing methods for the classification models. Furthermore, I was able to experience natural language processing methods by using wordnet.
 
 \newpage
 
@@ -425,9 +443,17 @@ TODO - ????
 
 \section{Appendix}
 
+\subsection{Installation}
+
+TODO - 1. How to install python libraries  2. How to download source codes \& weights files from github repo
+
+\subsection{Environments}
+
+Due to the COVID-19, I had to leave UK. Thus, I was not able to test the final source codes in the lab machines. All codes (final version) were tested on the MacOS mojave.
+
 \subsection{Instructions}
 
-TODO - ????
+TODO - How to run programs ????
 
 \subsection{Technologies Used}
 
