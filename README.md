@@ -18,4 +18,4 @@ Then, you need to install the pretrainedmodel.
 pip3 install git+https://github.com/wpwei/pretrained-models.pytorch.git@vision_bug_fix
 ```
 
-This is because that the [EpicKitchens action detection model](https://github.com/epic-kitchens/action-models) is dependent upon a [fork of Remi Cadene's pretrained models](https://github.com/wpwei/pretrained-models.pytorch/treevision_bug_fix) that brings `DataParallel` support to PyTorch 1+.
+This is because that the [EpicKitchens action detection model](https://github.com/epic-kitchens/action-models) is dependent upon a [fork of Remi Cadene's pretrained models](https://github.com/wpwei/pretrained-models.pytorch/tree/vision_bug_fix) that brings `DataParallel` support to PyTorch 1+.
