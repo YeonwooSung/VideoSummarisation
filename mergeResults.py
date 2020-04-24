@@ -17,11 +17,14 @@ def arg_parse():
     """
     parser = argparse.ArgumentParser(description='Choose objects for the Video Summarisation system')
 
-    parser.add_argument("--obj_result", dest="obj_result", help="file path of result file of the object detection system", default='./output/testOutput.txt', type=str)
-    parser.add_argument('--action_result', dest='action_result', help='file path of result file of the action detection system', default='./output/actionDetection_output.txt', type=str)
+    parser.add_argument("--obj_result", dest="obj_result", help="file path of result file of the object detection system", default='./output/objectOutput_sk.txt', type=str)
+    parser.add_argument('--action_result', dest='action_result', help='file path of result file of the action detection system', default='./output/sk_actionDetection_output.txt', type=str)
     parser.add_argument('--mode', dest='mode', help='Execution mode - either debug or normal', choices=['debug', 'normal'], default='normal', type=str)
     parser.add_argument('--use_n', dest='use_n', help='y for using nouns, n for not using nouns', choices=['y', 'n'], default='n', type=str)
     parser.add_argument('--use_obj', dest='use_obj', help='y for using objects, n for not using objects', choices=['y', 'n'], default='n', type=str)
+    parser.add_argument("--video", dest = "video", help = "Video file to run detection on", default = "video.avi", type = str)
+    parser.add_argument("--output", dest = "output", help = "The output file name", default = "output/output.avi", type = str)
+    parser.add_argument('--generate_output', dest='generate_output_video', help='y for generating output video file, and n not generating the output video file.', choices=['y', 'n'], default='n', type=str)
 
     return parser.parse_args()
 
@@ -34,6 +37,8 @@ def validateWord(word):
         return word.split(':')[0].strip()
     elif '-' in word:
         return word.split('-')[0].strip()
+    elif ' ' in word:
+        return word.split(' ')[1].strip()
     return word
 
 def calculateSimilarity(w1, w2):
@@ -71,7 +76,7 @@ def calculateSimilarity(w1, w2):
             max_sims = max(sims)
             checker = True
     else:
-        print('[DEBUG] calculateSimilarity::Error ==> word1=({}), word2=({})'.format(word1, word2))
+        print('[Error] calculateSimilarity::Error ==> word1=({}), word2=({})'.format(word1, word2))
     return max_sims, checker
 
 
@@ -349,7 +354,7 @@ def checkFrameRangeForSimilarityCalculation(f, start_frame, end_frame, objList, 
     return index
 
 
-def compareObjectLists(objects1, objects2, threshold_n=0.4):
+def compareObjectLists(objects1, objects2, threshold_n=0.6):
     """
     Compare the object lists to detect the change point by comparing the size of intersection set
     with the calculated threshold value.
@@ -431,9 +436,54 @@ def checkIfAllDiff_NounLists(n_list1, n_list2):
     return not hasIdentical
 
 
-def compressOutputs(results, use_n, use_obj, exec_mode):
+def mapFrameNumToTime(frame_num, fps):
+    """
+    Convert the frame number to the corresponding time string.
+
+    :param frame_num: The frame number that should be converted to the time string.
+    :param fps:       The fps value of the video.
+    """
+    # check if the frame_num is equal to 0, which means that it is the starting frame
+    if frame_num == 0:
+        return '00:00'
+    t = frame_num // fps
+
+    if t > 3600:
+        hours = t // 3600
+        t -= (hours * 3600)
+        minutes = t // 60
+        t -= (minutes * 60)
+        seconds = t
+
+        # Check the time value to choose the suitable output format
+        # hours < 100  -> hh:mm:ss
+        # hours >= 100 -> hhh:mm:ss
+        if hours < 100:
+            return '{0:02d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
+        return '{0:03d}:{1:02d}:{2:02d}'.format(hours, minutes, seconds)
+    else:
+        minutes = t // 60
+        t -= (minutes * 60)
+        seconds = t
+
+        # output format -> mm:ss
+        return '{0:02d}:{1:02d}'.format(minutes, seconds)
+
+
+def compressOutputs(results, video_name, use_obj, exec_mode):
     # open file stream object for compression
     f = open('output/compress_result.txt', 'w+')
+
+    cap = cv2.VideoCapture(video_name)
+    fps = 8
+
+    # Find OpenCV version
+    (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
+    # get the fps of the target video
+    if int(major_ver) < 3:
+        fps = math.ceil(cap.get(cv2.cv.CV_CAP_PROP_FPS))
+    else:
+        fps = math.ceil(cap.get(cv2.CAP_PROP_FPS))
 
     prev_v = ''
     prev_n = []
@@ -452,13 +502,16 @@ def compressOutputs(results, use_n, use_obj, exec_mode):
         if prev_v != v:
             # check if it is debugging mode - if so, print out debugging message
             if exec_mode == 'debug':
-                print(
-                    '[DEBUG] change point detected - prev_v={}, v={}'.format(prev_v, v))
+                print('[DEBUG] change point detected - prev_v={}, v={}'.format(prev_v, v))
 
             # compare noun lists to check if it is safe to use the current frame as a chage point
             if compareNounLists(prev_n, n_list, frameNum=frame_num):
+                # get the time string
+                time_str = mapFrameNumToTime(frame_num, fps)
+
                 # write result text
-                f.write('{} -> prev_v={}, new_v={}\n'.format(frame_num, prev_v, v))
+                #TODO output format
+                f.write('{} -> {}, {}, {}\n'.format(time_str, v, n_list, objects))
                 # store the frame_num
                 frames.append(frame_num)
 
@@ -468,31 +521,18 @@ def compressOutputs(results, use_n, use_obj, exec_mode):
             prev_objects = objects
 
 
-        # check if noun_list chagned
-        elif checkIfAllDiff_NounLists(prev_n, n_list) and use_n:
-            # check if it is debugging mode - if so, print out debugging message
-            if exec_mode == 'debug':
-                print('[DEBUG] noun list changed\n\tprev_n={}\n\tn_list={}'.format(prev_n, n_list))
-
-            # write result text
-            f.write('{} -> prev_n={}, new_n={}\n'.format(frame_num, prev_n, n_list))
-            # store the frame_num
-            frames.append(frame_num)
-
-            # update the values of variables
-            prev_v = v
-            prev_n = n_list
-            prev_objects = objects
-
-
-        # check if objects chagned
-        elif compareObjectLists(prev_objects, objects) and use_obj:
+        # check if there were some meaningful changes in noun list and object list
+        elif compareObjectLists(prev_objects, objects) and checkIfAllDiff_NounLists(prev_n, n_list) and use_obj:
             # check if it is debugging mode - if so, print out debugging message
             if exec_mode == 'debug':
                 print('[DEBUG] noun list changed\n\tprev_obj={}\n\tobjects={}'.format(prev_objects, objects))
 
+            # get the time string
+            time_str = mapFrameNumToTime(frame_num, fps)
+
             # write result text
-            f.write('{} -> prev_objects={}, new_objects={}\n'.format(frame_num, prev_objects, objects))
+            #TODO output format
+            f.write('{} -> {}, {}, {}\n'.format(time_str, v, n_list, objects))
             # store the frame_num
             frames.append(frame_num)
 
@@ -585,8 +625,6 @@ def generateOutput(frames, video_name, output_video_name, exec_mode):
     # iterate video frames
     for frame in videodata:
         if frame_num == result_frame_num:
-            if exec_mode == 'debug':
-                print('[DEBUG] frame_num={}, result_frame_num={}'.format(frame_num, result_frame_num))
 
             # OpenCV uses BGR not RGB. 
             # Thus, we should convert the color space before write output frames
@@ -604,7 +642,7 @@ def generateOutput(frames, video_name, output_video_name, exec_mode):
                 result_frame_num = frames[f_index]
 
                 if exec_mode == 'debug':
-                    print('[DEBUG] new: result_frame_num={}, end_num={}'.format(result_frame_num, end_num))
+                    print('[DEBUG] frame_num={}, result_frame_num={}'.format(frame_num, result_frame_num))
 
         # write frames
         elif frame_num <= end_num and f_flag:
@@ -629,12 +667,22 @@ if __name__ == '__main__':
     results = mergeResults(obj_output_file_path, action_output_file_path, exec_mode)
 
     # argparse arguments
-    use_n = True if args.use_n == 'y' else False
     use_obj = True if args.use_obj == 'y' else False
 
-    # Compression
-    frames = compressOutputs(results, use_n, use_obj, exec_mode)
+    video_name = args.video
+    output_video = args.output
 
-    # Generate output video by using the results of compression method
-    #TODO target video file path -> argparse
-    generateOutput(frames, '../YouCook/Videos/0050.mp4', '../output.avi', exec_mode)
+    # Compression
+    frames = compressOutputs(results, video_name, use_obj, exec_mode)
+
+    print('Result: # of frames = {}'.format(len(frames)))
+    print('Start generating output video file')
+
+    # check if the program need to generate the output file
+    generate_output_video = False if args.generate_output_video == 'n' else True
+
+    if generate_output_video:
+        # Generate output video by using the results of compression method
+        generateOutput(frames, video_name, output_video, exec_mode)
+
+    print('Video is successfully generated\noriginal file:\n\t{}\noutput path:\n\t{}\n'.format(video_name, output_video))
