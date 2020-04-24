@@ -38,7 +38,9 @@ library or research worker, and to be made available on the World Wide Web. I re
 \addcontentsline{toc}{section}{Abstract}
 \section*{Abstract}
 
-TODO - ????
+This project proposes the video summarisation system to summarise cooking videos by detecting objects and actions in the video frames. In this paper, I detail the design and implementation of the system including all the decisions that were made. I then evaluate the performance of the object detection system, action detection system, and the entire video summarisation system. When evaluating the video summarisation system, I was not able to do the test and validate the generated text because I did not have the text recipes and annotations to compare. Therefore, I only evaluated the video summarisation system by checking and comparing the compression rate. More details about this are mentioned in the "Evaluation" section.
+
+The video summarisation system that is proposed in this paper reads the video frames from the video, detects objects and actions, and select keyframes by merging and compressing the results of detection systems. After selecting the keyframes, the system will generate the output file that contains the time string, verb, nouns, and objects for all selected keyframes.
 
 \newpage
 
@@ -57,6 +59,8 @@ Video summarization is a process of shortening a video by selecting keyframes or
 Summarization has many use cases, with one of the most significant being the ability to gauge interest in the content. For example, the users might want to summarize the online tutorial video, since they think the tutorial video contains too much information than they needed. Or, some users might want to summarize the video that they filmed, so that they could upload the summarized version on social media and share it with other users.
 
 The AI could play a key role with video summarization, since the AI is playing a large role in many other video editing tools, such as video classification tools that classify the contents of the video for editing purposes. The main aim of this project is to implement a program that uses the neural networks to understand the semantic of the video so that it could summarize the video properly. The key idea of this project is to use object detection and action detection algorithms to understand the semantic of the video.
+
+The video summarisation system, which is proposed in this project, uses the object detection system (PyTorch implementation of YOLOv3 model \hyperlink{ref2}{[2]}) and the action detection system (pretrained model of Epic Kitchens \hyperlink{ref8}{[8]}) as components, so that the system could extract information from video frames. After detecting objects and actions, the system merges and compresses the results of object detection and action detection. After compression process finishes, the system prints out the results to the text file, which contains the time, verb, nouns, and objects of all detected keyframes.
 
 
 \subsection{Motivation}
