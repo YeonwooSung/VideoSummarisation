@@ -510,7 +510,6 @@ def compressOutputs(results, video_name, use_obj, exec_mode):
                 time_str = mapFrameNumToTime(frame_num, fps)
 
                 # write result text
-                #TODO output format
                 f.write('{} -> {}, {}, {}\n'.format(time_str, v, n_list, objects))
                 # store the frame_num
                 frames.append(frame_num)
@@ -531,7 +530,6 @@ def compressOutputs(results, video_name, use_obj, exec_mode):
             time_str = mapFrameNumToTime(frame_num, fps)
 
             # write result text
-            #TODO output format
             f.write('{} -> {}, {}, {}\n'.format(time_str, v, n_list, objects))
             # store the frame_num
             frames.append(frame_num)

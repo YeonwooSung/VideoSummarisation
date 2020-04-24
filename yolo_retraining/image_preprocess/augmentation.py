@@ -80,7 +80,7 @@ def augmentationLoop(name):
         file_path = '{}/{}'.format(name, fn)
         if not fn.startswith(name):
             continue
-        print(file_path) #TODO
+        print(file_path)
         aug_start = image_augment(file_path, name, aug_start)
 
 def main():
