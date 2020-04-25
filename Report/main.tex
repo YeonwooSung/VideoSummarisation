@@ -9,14 +9,24 @@
 \usepackage[ruled,vlined]{algorithm2e}
 \graphicspath{ {.} }
 
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=black,      
+    urlcolor=black,
+}
+
+
 \title{SH Project Report}
-\author{Yeonwoo Sung}
+\author{Yeonwoo Sung\\[0.5cm]{Supervisor: Dr. Juan Ye}}
 \date{April 27th 2020}
 
 \begin{document}
 
 \maketitle
-\titlepic{\includegraphics[width=300]{imgs/standrews_logo.png}}
+\begin{center}
+    \titlepic{\includegraphics[width=250]{imgs/standrews_logo.png}}
+\end{center}
 
 \newpage
 
@@ -26,7 +36,7 @@
 I declare that the material submitted for assessment is my own work except where credit is explicitly given to others by citation or acknowledgement. 
 This work was performed during the current academic year except where otherwise stated.
 
-The main text of this project report is ????? words long, including project specification and plan.
+The main text of this project report is 10050 words long, including project specification and plan.
 
 In submitting this project report to the University of St Andrews, I give permission for it to be made 
 available for use in accordance with the regulations of the University Library. I also give permission for 
@@ -371,7 +381,7 @@ There are several points that could be improved in the future.\newline
 
 When searching for the dataset to retrain the YOLOv3 model, I found that none of the dataset provides the images for the ingredients of the foods. Most of the datasets that contains the images about foods only have images of actual foods and dishes. Clearly, it would be possible to improve the performance of video summarisation system by making object detection system to detect ingredients in the video frames.
 
-Furthermore, I found that the YOLOv3 model cannot recognise the processed food ingredients properly. For example, the YOLOv3 could recognise carrots, however, it cannot recognise the chopped carrots. Definitely, many ingredients were processed and transformed in the cooking videos. To summarise the cooking videos correctly, the techniques that helps the system to recognise the processed food ingredients should be invented.\newline\newline
+Furthermore, I found that the YOLOv3 model cannot recognise the processed food ingredients properly. For example, the YOLOv3 could recognise carrots, however, it cannot recognise the chopped carrots. Definitely, many ingredients were processed and transformed in the cooking videos. To summarise the cooking videos correctly, the techniques that helps the system to recognise the processed food ingredients should be invented.\newline
 
 \textbf{Action detection system}
 
@@ -449,15 +459,52 @@ By doing this project, I was able to learn how to use and train the YOLOv3 model
 
 \subsection{Installation}
 
-TODO - 1. How to install python libraries  2. How to download source codes \& weights files from github repo
+You could install most of the required python libraries by using "pip3 install -r requirements.txt", which will install all libraries that are listed in the requirements.txt file with corresponding versions. Then, you need to install the pretrainedmodels by running "pip3 install git+https://github.com/wpwei/pretrained-models.pytorch.git@vision\_bug\_fix". Basically, the EpicKitchens action detection model is dependent upon the specific version of the pretrainedmodels library, thus, to run the action detection system, you need to install this manually.
+
+Also, you should download weight files for the YOLOv3 models from the github repository of this project to run the object detection system. You could find the "yolov3.weights" and "yolov3-food.weights" files from my github repository (url: https://github.com/YeonwooSung/VideoSummarisation). Or you could simply clone the repository by using the following command to get all files including weight files for YOLOv3 model.
+
+"git clone https://github.com/YeonwooSung/VideoSummarisation.git"
 
 \subsection{Environments}
 
-Due to the COVID-19, I had to leave UK. Thus, I was not able to test the final source codes in the lab machines. All codes (final version) were tested on the MacOS mojave.
+Due to the COVID-19, I had to go back to Korea. Thus, I was not able to test the final source codes in the lab machines. The main reason that I did not ssh to the lab machines are mentioned in the "COVID-19" section in the Introduction. Due to this, all codes (final version) were tested on my laptop (MacOS mojave).
 
 \subsection{Instructions}
 
-TODO - How to run programs ????
+There are 3 main python files in this project, which are "video.py", "actionDetection.py", and "mergeResults.py".\newline
+
+\textbf{1. video.py}
+
+The "video.py" file is the main file of the object detection system. By executing this file with suitable command line argument options, the "video.py" will generate the intermediate result file, which contains the texts for detected objects in the target video.
+
+If you run the "python3 video.py --help", you would be able to see descriptions for all possible command line options for the "video.py" file. Perhaps, most of them would be unnecessary things for testing. However, unlike other options, the '--video' option is necessary. Basically, this option helps you to set the file path of the target video that you want to process. Therefore, by running the follow command (replacing <File\_Path> with suitable file path string of the target video), you will be able to run the object detection system.\newline
+
+"python3 video.py --video <File\_Path>"\newline
+
+\textbf{2. actionDetection.py}
+
+The "actionDetection.py" file is the main file for the action detection system. By running this file, you would be able to download and run the Epic Kitchens pretrained models to detect actions from the target video. After processing all video frames in the target video, it will generate the intermediate result file, which contains the texts for detected verbs and nouns.
+
+Similar with the "video.py" you need to set the file path of the target video by using "--video\_file" option. By running the following command, you could run the action detection system.\newline
+
+"python3 actionDetection.py --video\_file <File\_Path>"\newline
+
+Make sure to replace the <File\_Path> with the suitable file path string before running the program. Furthermore, to see the descriptions for all command line options, run the program with the "--help" option.\newline
+
+\textbf{3. mergeResults.py}
+
+The "mergeResults.py" file is the main file for the merging and compression process of the video summarisation system. This file will read the results of the action detection system and object detection system from the given file paths, and generate the result text file.
+
+Again, you need to run the program with "--video" option to let the program know the file path of the target video.
+
+"python3 mergeResults.py --video <File\_Path>"\newline
+
+Please make sure that you use same file path string for "video.py", "actionDetection.py", and "mergeResults.py". I did not test what actually happens when you use different file path strings, however, it is clear that if you do not use the same file path string (or set the same video as a target video), the system will not work properly.\newline
+
+
+In the "epic\_annotations" directory, you could find the "download.sh" file. By running this file, you will be able to download some of the videos from the Epic Kitchens dataset. Make sure to prepare enough memory before download the dataset, since the total size of the videos that you will download by running the "download.sh" file will be more than 8GB.
+
+\newpage
 
 \subsection{Technologies Used}
 
