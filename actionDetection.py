@@ -454,7 +454,7 @@ f_tsn = open('output/tsn_output.txt', 'w+')
 f_tsm = open('output/tsm_output.txt', 'w+')
 
 
-generate_output_file = True #TODO False
+generate_output_file = True
 
 # use while loop to read the frames of the target video
 while cap.isOpened():
